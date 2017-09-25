@@ -1,0 +1,146 @@
+import { TimeTrackingRoleFactory } from './../Data/TimeTrackingRole';
+import { TimeTrackingEntryFactory, TimeTrackingEntry } from './../Data/TimeTrackingEntry';
+import { IBaseDataGridOptions } from './../Base/BasicDataGrid';
+import { TimeTrackingRolesDocument, TimeTrackingEntriesDocument } from './../Data/Contract';
+import { BasicDataGrid, BaseDataGridCreateDialogType } from '../Base/BasicDataGrid';
+import { addComboBox, addNumber, addTextArea, addTextbox, addDatePicker } from '../UIHelper/ModalDialogHelper';
+import { newGuid } from '../Data/Guid';
+import { parseDate } from '../Data/Date';
+import { getTimeIndex, updateDocument, getCurrentProject } from '../Data/DataServiceHelper';
+import { updateBudget } from "../WorkItemHelper/WorkItemHelper";
+
+export class TimesPageTimesGrid extends BasicDataGrid<TimeTrackingEntry, TimeTrackingEntriesDocument, TimeTrackingEntryFactory> {
+    private roles: TimeTrackingRolesDocument;
+
+    constructor(workItemId: number) {
+        let gridOptions = <IBaseDataGridOptions>{
+            selector: '#timesContainer',
+            entityName: 'Time',
+            sortIndex: 'date',
+            sortOrder: 'desc',
+            workItemId: workItemId,
+            indexType: 'time',
+            enableExport: true
+        };
+
+        super(gridOptions, new TimeTrackingEntryFactory());
+    }
+
+    private _getRoles(): IPromise<TimeTrackingRolesDocument> {
+        return TimeTrackingRoleFactory.getRoles().then((roles) => {
+            this.roles = roles;
+            return roles;
+        });
+    }
+
+    getKey(value: TimeTrackingEntry): string {
+        return value.id;
+    }
+
+    filterValue(value: TimeTrackingEntry, status: boolean) {
+        return true;
+    }
+
+    validate(container: JQuery, type: BaseDataGridCreateDialogType, validateNew?: boolean, self?: TimesPageTimesGrid): boolean {
+        let role = <string>container.find('#role_txt').val();
+        let hours = parseFloat(<string>container.find('#hours').val());
+        let date = container.find('#date').val();
+        let description = container.find('#description').val();
+
+        return role !== '' && !isNaN(hours) && date !== null && description !== '';
+    }
+
+    createDialogUIControls(dialogUI: JQuery<HTMLElement>, hasEntry: boolean, self: TimesPageTimesGrid, type: BaseDataGridCreateDialogType, entry?: TimeTrackingEntry): IPromise<void> {
+        return self._getRoles().then((roles) => {
+            addTextbox(dialogUI, 'Person', 'person', true, hasEntry ? entry.person : VSS.getWebContext().user.name, true);
+            addComboBox(dialogUI, 'Role', 'role', true, hasEntry ? entry.role : undefined, false, Array.from(roles.map.values()), (v) => v.name);
+            addNumber(dialogUI, 'Hours spent', 'hours', 0.0, 24.0, 0.25, true, hasEntry ? entry.hours : undefined, false);
+            addDatePicker(dialogUI, 'Date', 'date', true, hasEntry ? entry.date : new Date(), false);
+            addTextArea(dialogUI, 'Description', 'description', true, hasEntry ? entry.description : undefined, false);
+            return undefined;
+        });
+    }
+
+    createValue(container: JQuery, self: TimesPageTimesGrid, type: BaseDataGridCreateDialogType, entry?: TimeTrackingEntry): TimeTrackingEntry {
+        let role = <string>container.find('#role_txt').val();
+        let roleElement = self.roles.map.has(role) ? self.roles.map.get(role) : undefined;
+        let hours = parseFloat(<string>container.find('#hours').val());
+        let date = parseDate(<string>container.find('#date').val());
+        let description = <string>container.find('#description').val();
+
+        let user = VSS.getWebContext().user;
+
+        if (entry) {
+            entry.role = roleElement;
+            entry.hours = hours;
+            entry.date = date;
+            entry.description = description;
+            return entry;
+        } else {
+            return new TimeTrackingEntry(newGuid(), user.id, user.name, roleElement, hours, date, description);
+        }
+    }
+
+    afterCreateEntry(entry: TimeTrackingEntry, type: BaseDataGridCreateDialogType, self: TimesPageTimesGrid): void {
+        self._updateTimeIndex(entry, self, false);
+
+        updateBudget(self.options.workItemId, (data) => {
+            data.usedHours += entry.hours;
+            data.usedCost += entry.hours * entry.role.cost;
+        });
+    }
+
+    determineEntityDialogType(entity: TimeTrackingEntry): BaseDataGridCreateDialogType {
+        return 'create';
+    }
+
+    private oldHours: number;
+
+    beforeEditEntry(entry: TimeTrackingEntry, type: BaseDataGridCreateDialogType, self: TimesPageTimesGrid): void {
+        self.oldHours = entry.hours;
+    }
+
+    afterEditEntry(entry: TimeTrackingEntry, type: BaseDataGridCreateDialogType, self: TimesPageTimesGrid): void {
+        self._updateTimeIndex(entry, self, false);
+
+        if (self.oldHours !== entry.hours) {
+            let diff = entry.hours - self.oldHours;
+            updateBudget(self.options.workItemId, (data) => {
+                data.usedHours += diff;
+                data.usedCost += diff * entry.role.cost;
+            });
+        }
+    }
+
+    afterDeleteEntry(entry: TimeTrackingEntry, type: BaseDataGridCreateDialogType, self: TimesPageTimesGrid): void {
+        let remove = true;
+        let year = entry.date.getFullYear();
+        let month = entry.date.getMonth();
+
+        self.document.map.forEach((value, key) => {
+            if (value.date.getFullYear() === year && value.date.getMonth() === month) {
+                remove = false;
+            }
+        });
+        self._updateTimeIndex(entry, self, remove);
+
+        updateBudget(self.options.workItemId, (data) => {
+            data.usedHours -= entry.hours;
+            data.usedCost -= entry.hours * entry.role.cost;
+        });
+    }
+
+    private _updateTimeIndex(entry: TimeTrackingEntry, self: TimesPageTimesGrid, remove: boolean): void {
+        getTimeIndex(entry.date.getFullYear(), entry.date.getMonth()).then((index) => {
+            if (remove) {
+                if (index.map.has(self.options.workItemId)) {
+                    index.map.delete(self.options.workItemId);
+                    updateDocument(index);
+                }
+            } else if (!index.map.has(self.options.workItemId)) {
+                index.map.set(self.options.workItemId, TimeTrackingEntryFactory.prototype.createDocumentId(self.options.workItemId));
+                updateDocument(index);
+            }
+        });
+    }
+}

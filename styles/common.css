@@ -1,0 +1,25 @@
+.menu-item > span.icon {
+    text-decoration: none !important;
+}
+
+.taePage {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-around;
+}
+  
+.taeColumn {
+    flex-grow: 1;
+    margin: 24px;
+}
+  
+.taeDoubleWidth {
+    flex-grow: 2;
+}
+
+.taeTripeWidth {
+    flex-grow: 3;
+}

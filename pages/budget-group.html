@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" style="height: 100%">
+
+<head>
+    <title>Budget Group</title>
+    <meta charset="utf-8" />
+    <script src="../lib/VSS.SDK.min.js"></script>
+    <link rel="stylesheet" href="../styles/wi-form-group.css">
+    <link rel="stylesheet" href="../styles/bullet.css">
+</head>
+
+<body style="height: 100%">
+    <script type="text/javascript">
+        VSS.init({
+            explicitNotifyLoaded: true,
+            usePlatformScripts: true
+        });
+
+        VSS.ready(function () {
+            VSS.require(['scripts/WorkItemForm/BudgetGroup'], function (tg) {
+                var group = new tg.BudgetGroup();
+                group.init();
+                VSS.notifyLoadSucceeded();
+            });
+        });
+    </script>
+
+    <div class="budget-container" style=" height: 100%;">
+        <div class="group-controls">
+            <div class="control">
+                <div class="workitemlabel label-control">
+                    <label class="workitemcontrol-label" for="budget" title="Budget">Budget</label>
+                </div>
+                <div id="budgetSelect" class="workitemcontrol work-item-control initialized">
+                </div>
+            </div>
+        </div>
+        <div class="effort-chart-container"></div>
+        <div class="cost-chart-container"></div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <title>Assign Budget</title>
+    <meta charset="utf-8" />
+    <script src="../lib/VSS.SDK.min.js"></script>
+</head>
+
+<body>
+    <script type="text/javascript">
+        VSS.init({
+            explicitNotifyLoaded: true,
+            usePlatformScripts: true
+        });
+
+        VSS.ready(function () {
+            VSS.require(['scripts/ContextMenu/AssignBudget'], function () {
+                VSS.notifyLoadSucceeded();
+            });
+        });
+    </script>
+</body>
+
+</html>

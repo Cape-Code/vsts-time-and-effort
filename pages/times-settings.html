@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" style="height: 100%">
+
+<head>
+    <title>Times Settings</title>
+    <meta charset="utf-8" />
+    <script src="../lib/VSS.SDK.min.js"></script>
+    <link rel="stylesheet" href="../styles/common.css">
+</head>
+
+<body style="height: 100%">
+    <script type="text/javascript">
+        VSS.init({
+            explicitNotifyLoaded: true,
+            usePlatformScripts: true
+        });
+        
+        VSS.ready(function() {
+            VSS.require(['scripts/Settings/TimesSettingsHub'], function (tsh) {
+                var hub = new tsh.TimesSettingsHub();
+                hub.init();
+                VSS.notifyLoadSucceeded();
+            });
+        });
+    </script>
+
+    <div class="taePage">
+        <div id="timesBudgetsContainer" class="taeColumn taeTripeWidth">
+        </div>
+        <div id="timesSettingsContainer" class="taeColumn">
+        </div>
+        <div id="timesCustomersContainer" class="taeColumn">
+        </div>
+    </div>
+</body>
+
+</html>

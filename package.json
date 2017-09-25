@@ -1,0 +1,42 @@
+{
+  "name": "cc-time-and-effort",
+  "private": true,
+  "version": "0.1.232",
+  "description": "Plan & track time and costs on work items easily.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Cape-Code/vsts-time-and-effort.git"
+  },
+  "keywords": [
+    "vsts"
+  ],
+  "author": "Cape Code GmbH & Co. KG",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Cape-Code/vsts-time-and-effort/issues"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "postbuild": "npm run package",
+    "package": "tfx extension create",
+    "gallery-publish": "tfx extension publish",
+    "dev-publish": "tfx extension publish --rev-version --overrides-file vss-dev-override.json",
+    "clean": "rimraf ./dist && rimraf ./*.vsix"
+  },
+  "devDependencies": {
+    "rimraf": "^2.5.4",
+    "tfx-cli": "^0.4.9",
+    "typescript": "2.3.4",
+    "tslint": "^5.7.0"
+  },
+  "dependencies": {
+    "@types/file-saver": "^0.0.1",
+    "@types/jquery": "^3.2.12",
+    "@types/knockout": "^3.4.45",
+    "@types/q": "^1.0.5",
+    "@types/xlsx": "^0.0.35",
+    "file-saver": "^1.3.3",
+    "vss-web-extension-sdk": "^3.121.0",
+    "xlsx": "^0.11.3"
+  }
+}

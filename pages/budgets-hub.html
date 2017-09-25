@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" style="height: 100%">
+
+<head>
+    <title>Budgets Hub</title>
+    <meta charset="utf-8" />
+    <script src="../lib/VSS.SDK.min.js"></script>
+    <link rel="stylesheet" href="../styles/common.css">
+    <link rel="stylesheet" href="../styles/budgets-hub.css">
+    <link rel="stylesheet" href="../styles/bullet.css">
+</head>
+
+<body style="height: 100%">
+    <script type="text/javascript">
+        VSS.init({
+            explicitNotifyLoaded: true,
+            usePlatformScripts: true
+        });
+        
+        VSS.ready(function() {
+            VSS.require(['scripts/Reporting/BudgetsHub'], function (th) {
+                var hub = new th.BudgetsHub();
+                hub.init();
+                VSS.notifyLoadSucceeded();
+            });
+        });
+    </script>
+
+    <div id="hubContainer" style="min-height: 500px">
+    </div>
+</body>
+
+</html>

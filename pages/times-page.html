@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" style="height: 100%">
+
+<head>
+    <title>Times Page</title>
+    <meta charset="utf-8" />
+    <script src="../lib/VSS.SDK.min.js"></script>
+    <script src="../lib/FileSaver.min.js"></script>
+    <script src="../lib/xlsx.core.min.js"></script>
+    <link rel="stylesheet" href="../styles/common.css">
+</head>
+
+<body style="height: 100%">
+    <script type="text/javascript">
+        VSS.init({
+            explicitNotifyLoaded: true,
+            usePlatformScripts: true
+        });
+        
+        VSS.ready(function() {
+            VSS.require(['scripts/WorkItemForm/TimesPage'], function (tp) {
+                var page = new tp.TimesPage();
+                page.init();
+                VSS.notifyLoadSucceeded();
+            });
+        });
+    </script>
+
+    <div id="splitter" class="horizontal splitter" style="min-height: 500px">
+        <div id="timesContainer" class="leftPane">
+        </div>
+        <div class="handleBar"></div>
+        <div id="childTimesContainer" class="rightPane">
+        </div>
+    </div>
+</body>
+
+</html>
