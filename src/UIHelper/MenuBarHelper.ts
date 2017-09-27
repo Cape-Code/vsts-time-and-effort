@@ -12,6 +12,7 @@ export interface IMenuBarConfiguration<T, U, V> {
     create?: IMenuBarCreateConfiguration<T, U, V>;
     assignBtn?: IMenuBarCreateConfiguration<T, U, V>;
     filter?: IMenuBarFilterConfiguration;
+    toggleGroupBy?: IMenuBarToggleGroupByConfiguration;
     toggleHidden?: IMenuBarToggleHiddenConfiguration;
     export?: IMenuBarExportConfiguration<T, U>;
 }
@@ -24,6 +25,10 @@ export interface IMenuBarCreateConfiguration<T, U, V> {
     validateFn: (dialogElement: JQuery, type: V) => boolean;
     valueFn: (dialogElement: JQuery, self: U, type: V) => T;
     type: V;
+}
+
+export interface IMenuBarToggleGroupByConfiguration {
+    toggleFn: () => void;
 }
 
 export interface IMenuBarFilterConfiguration {
@@ -62,6 +67,9 @@ function _createMenuBarOptions<T, U, V>(options: IMenuBarConfiguration<T, U, V>)
                     break;
                 case 'Filter':
                     showModalDialog(options.container, 'Select Timeframe', 'Filter', options.filter.filterOkFn, _createFilterDialogUI, _validateFilter, _createFilterValue, options.self, getCurrentMonthFilterTimeFrame());
+                    break;
+                case 'Group':
+                    options.toggleGroupBy.toggleFn();
                     break;
                 case 'Hidden':
                     options.toggleHidden.toggleHiddenFn();
@@ -122,6 +130,10 @@ function _createMenuBarItems<T, U, V>(options: IMenuBarConfiguration<T, U, V>): 
 
     if (options.filter) {
         _createMenuBarItem(items, 'Filter', 'search-filter');
+    }
+
+    if (options.toggleGroupBy) {
+        _createMenuBarItem(items, 'Group', 'group-rows');
     }
 
     if (options.toggleHidden) {

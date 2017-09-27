@@ -5,7 +5,7 @@ import { MessageAreaControl } from 'VSS/Controls/Notifications';
 import { Grid, IGridOptions, GridHierarchySource } from 'VSS/Controls/Grids';
 import { createNotification } from '../UIHelper/NotificationHelper';
 import { createWaitControl } from '../UIHelper/WaitHelper';
-import { groupTimesByBudget } from '../WorkItemHelper/WorkItemHelper';
+import { groupTimesByBudget, groupTimesByPerson } from '../WorkItemHelper/WorkItemHelper';
 import { IMenuBarConfiguration, createMenuBar, getCurrentMonthFilterTimeFrame } from '../UIHelper/MenuBarHelper';
 import { createHierarchyGridOptions } from '../UIHelper/GridHelper';
 import { create } from 'VSS/Controls';
@@ -15,11 +15,14 @@ export class TimesHub {
     private wait: WaitControl;
     private notification: MessageAreaControl;
     private grid: Grid;
+    private groupByState: 'budget' | 'person';
+    private currentFilterBegin: Date;
+    private currentFilterEnd: Date;
 
     public init(): void {
         hasAccess().then((res) => {
             let c = $('#hubContainer');
-            
+
             if (res) {
                 this.notification = createNotification(c);
                 this.wait = createWaitControl(c);
@@ -33,13 +36,33 @@ export class TimesHub {
 
     private _createMenu(container: JQuery): void {
         let filterOkFn = (value: [Date, Date]) => {
+            this.currentFilterBegin = value[0];
+            this.currentFilterEnd = value[1];
             this.wait.startWait();
 
-            groupTimesByBudget(value[0], value[1]).then((values) => {
+            groupTimesByBudget(this.currentFilterBegin, this.currentFilterEnd).then((values) => {
                 this.grid.setDataSource(new GridHierarchySource(values));
                 this.wait.endWait();
             });
         }
+
+        let toggleGroupFn = () => {
+            this.wait.startWait();
+
+            if (this.groupByState === 'budget') {
+                groupTimesByPerson(this.currentFilterBegin, this.currentFilterEnd).then((values) => {
+                    this.grid.setDataSource(new GridHierarchySource(values));
+                    this.groupByState = 'person';
+                    this.wait.endWait();
+                });
+            } else {
+                groupTimesByBudget(this.currentFilterBegin, this.currentFilterEnd).then((values) => {
+                    this.grid.setDataSource(new GridHierarchySource(values));
+                    this.groupByState = 'budget';
+                    this.wait.endWait();
+                });
+            }
+        };
 
         let exportFn: (self: TimesHub) => [TimeTrackingCompleteEntry[], [{ (t: TimeTrackingCompleteEntry): number | string | Date | boolean; }, IExcelColumnFormatOptions][]] = (self: TimesHub) => {
             return [self.grid._dataSource, TimeTrackingCompleteEntryFactory.prototype.createExportColumns()];
@@ -54,14 +77,20 @@ export class TimesHub {
             },
             export: {
                 exportFn: exportFn
+            },
+            toggleGroupBy: {
+                toggleFn: toggleGroupFn
             }
         });
     }
 
     private _createGrid(container: JQuery): void {
+        this.groupByState = 'budget';
         this.wait.startWait();
         let timeFrame = getCurrentMonthFilterTimeFrame();
-        groupTimesByBudget(timeFrame[0], timeFrame[1]).then((values) => {
+        this.currentFilterBegin = timeFrame[0];
+        this.currentFilterEnd = timeFrame[1];
+        groupTimesByBudget(this.currentFilterBegin, this.currentFilterEnd).then((values) => {
             let dataFn = () => {
                 return values;
             };

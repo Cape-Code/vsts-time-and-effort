@@ -1,7 +1,7 @@
 import { TimeTrackingBudgetAssignmentDocument, TimeTrackingBudgetAssignmentDocumentFactory } from './../Data/TimeTrackingBudgetAssignmentDocument';
 import { IBaseHierarchyGridOptions } from './../Base/BasicHierarchyGrid';
 import { TimeTrackingEstimateEntry, TimeTrackingEstimateEntryFactory } from './../Data/TimeTrackingEstimateEntry';
-import { IWorkItemHierarchy } from './WorkItemHelper';
+import { IWorkItemHierarchy, TimeTrackingCompleteEntryHierarchy } from './WorkItemHelper';
 import { getNumberFormat } from 'VSS/Utils/Culture';
 import { TimeTrackingEntriesTimeIndex, TimeTrackingEntriesDocument, IDocument, IEntityFactory, TimeTrackingEstimateEntriesDocument } from './../Data/Contract';
 import { TimeTrackingEntry, TimeTrackingEntryFactory } from './../Data/TimeTrackingEntry';
@@ -13,6 +13,7 @@ import { TimeTrackingBudgetDataDocument, TimeTrackingBudgetDataDocumentFactory }
 import * as Q from 'q';
 import { getGlobalTimeIndex, getTimeIndexById, getDocumentById, getCustomDocument, createCustomDocumentWithValue, updateCustomDocument, createCustomDocument, getCurrentProject } from '../Data/DataServiceHelper';
 import { updateQuery } from "./QueryHelper";
+import { format } from "../Data/Date";
 
 function getRelationTypes(client: WorkItemTrackingHttpClient3_2, filterFn: (type: WorkItemRelationType) => boolean): IPromise<Map<string, WorkItemRelationType>> {
     return client.getRelationTypes().then((types) => {
@@ -56,6 +57,48 @@ function convertTimeFrameToIndexKeys(start: Date, end: Date): string[] {
     return result;
 }
 
+export function groupTimesByPerson(start: Date, end: Date): IPromise<TimeTrackingCompleteEntryHierarchy[]> {
+    let result: TimeTrackingCompleteEntryHierarchy[] = [];
+    let personMap = new Map<string, TimeTrackingCompleteEntryHierarchy>();
+    let personDayMap = new Map<string, TimeTrackingCompleteEntryHierarchy>();
+
+    let addTime = (source: TimeTrackingCompleteEntry, target: TimeTrackingCompleteEntryHierarchy) => {
+        target.hours += source.hours;
+        target.cost += source.hours * source.role.cost;
+        target.role = `${target.cost}${getNumberFormat().CurrencySymbol}`;
+
+        if (target.parent)
+            addTime(source, <TimeTrackingCompleteEntryHierarchy>target.parent);
+    };
+
+    return getGlobalWorkItemTimes(start, end).then((times) => {
+        times.forEach((time) => {
+            if (!personMap.has(time.personId)) {
+                let element = <TimeTrackingCompleteEntryHierarchy>{ type: 'Person', workItemName: time.person, children: [], item: undefined, workItemId: 0, title: time.person, workItemType: 'Person', workItemIdString: '', cost: 0, hours: 0 };
+                personMap.set(time.personId, element);
+                result.push(element);
+            }
+
+            let dayKey = time.personId + format(time.date);
+
+            if (!personDayMap.has(dayKey)) {
+                let element = <TimeTrackingCompleteEntryHierarchy>{ type: 'Day', workItemName: format(time.date), children: [time], item: undefined, workItemId: 0, title: format(time.date), workItemType: 'Day', workItemIdString: '', cost: 0, hours: 0, date: time.date };
+                personDayMap.set(dayKey, element);
+                let parent = personMap.get(time.personId);
+                parent.children.push(element);
+                element.parent = parent;
+                addTime(time, element);
+            } else {
+                let parent = personDayMap.get(dayKey);
+                addTime(time, parent);
+                parent.children.push(time);
+            }
+        });
+
+        return result;
+    });
+}
+
 export function groupTimesByBudget(start: Date, end: Date): IPromise<TimeTrackingCompleteEntryHierarchy[]> {
     return getGlobalWorkItemTimes(start, end).then((times) => {
         let index = new Set(times.map((time) => time.workItemIdString));
@@ -81,6 +124,7 @@ export interface TimeTrackingCompleteEntryHierarchy extends IWorkItemHierarchy<T
     workItemIdString: string;
     workItemType: string;
     title: string;
+    date?: Date;
 }
 
 function addTimeToBudget(id: string, entry: TimeTrackingCompleteEntry, name: string, cache: Map<string, TimeTrackingCompleteEntryHierarchy>, result: TimeTrackingCompleteEntryHierarchy[]) {
