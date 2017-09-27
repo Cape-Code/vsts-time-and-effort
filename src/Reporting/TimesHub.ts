@@ -52,6 +52,8 @@ export class TimesHub {
             if (this.groupByState === 'budget') {
                 groupTimesByPerson(this.currentFilterBegin, this.currentFilterEnd).then((values) => {
                     this.grid.setDataSource(new GridHierarchySource(values));
+                    this.grid.collapseAll();
+                    this.grid.expandByLevel(1);
                     this.groupByState = 'person';
                     this.wait.endWait();
                 });

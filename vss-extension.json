@@ -1,7 +1,7 @@
 {
     "manifestVersion": 1,
     "id": "cc-time-and-effort",
-    "version": "0.1.237",
+    "version": "0.1.239",
     "publisher": "capecode",
     "name": "Time & Effort",
     "description": "Plan & track time and costs on work items easily.",
