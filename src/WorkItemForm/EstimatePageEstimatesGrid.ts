@@ -21,7 +21,7 @@ export class EstimatePageEstimatesGrid extends BasicDataGrid<TimeTrackingEstimat
             sortIndex: 'role',
             workItemId: workItemId,
             indexType: 'estimate',
-            height: '750px'
+            height: '500px'
         };
 
         super(gridOptions, new TimeTrackingEstimateEntryFactory());
@@ -66,7 +66,7 @@ export class EstimatePageEstimatesGrid extends BasicDataGrid<TimeTrackingEstimat
     createDialogUIControls(dialogUI: JQuery<HTMLElement>, hasEntry: boolean, self: EstimatePageEstimatesGrid, type: BaseDataGridCreateDialogType, entry?: TimeTrackingEstimateEntry): IPromise<void> {
         if (type === 'create') {
             return self._getRoles().then((roles) => {
-                addComboBox(dialogUI, 'Role', 'role', true, hasEntry ? entry.role : undefined, hasEntry, Array.from(roles.map.values()), (v) => v.name);
+                addComboBox(dialogUI, 'Role', 'role', true, hasEntry ? entry.role : undefined, false, Array.from(roles.map.values()), (v) => v.name);
                 addNumber(dialogUI, 'Hours', 'hours', 0.0, 24.0, 0.25, true, hasEntry ? entry.hours : undefined, false);
                 addTextArea(dialogUI, 'Description', 'description', false, hasEntry ? entry.description : undefined, false);
                 return undefined;
@@ -113,6 +113,7 @@ export class EstimatePageEstimatesGrid extends BasicDataGrid<TimeTrackingEstimat
         let description = <string>container.find('#description').val();
 
         if (entry) {
+            entry.role = roleElement;
             entry.hours = hours;
             entry.description = description;
             return entry;

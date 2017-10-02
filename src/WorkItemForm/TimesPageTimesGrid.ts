@@ -24,7 +24,7 @@ export class TimesPageTimesGrid extends BasicDataGrid<TimeTrackingEntry, TimeTra
             workItemId: workItemId,
             indexType: 'time',
             enableExport: true,
-            height: '750px'
+            height: '500px'
         };
 
         super(gridOptions, new TimeTrackingEntryFactory());
