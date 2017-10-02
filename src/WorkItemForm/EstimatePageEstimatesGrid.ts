@@ -1,6 +1,6 @@
 import { TimeTrackingBudgetDataDocumentFactory } from './../Data/TimeTrackingBudgetDataDocument';
 import { TimeTrackingBudgetAssignmentDocument, TimeTrackingBudgetAssignmentDocumentFactory } from './../Data/TimeTrackingBudgetAssignmentDocument';
-import { TimeTrackingRoleFactory } from './../Data/TimeTrackingRole';
+import { TimeTrackingRoleFactory, TimeTrackingRole } from './../Data/TimeTrackingRole';
 import { IBaseDataGridOptions } from './../Base/BasicDataGrid';
 import { TimeTrackingEstimateEntry, TimeTrackingEstimateEntryFactory } from './../Data/TimeTrackingEstimateEntry';
 import { TimeTrackingRolesDocument, TimeTrackingEstimateEntriesDocument } from './../Data/Contract';
@@ -134,17 +134,20 @@ export class EstimatePageEstimatesGrid extends BasicDataGrid<TimeTrackingEstimat
     }
 
     private oldHours: number;
+    private oldRole: TimeTrackingRole;
 
     beforeEditEntry(entry: TimeTrackingEstimateEntry, type: BaseDataGridCreateDialogType, self: EstimatePageEstimatesGrid): void {
         self.oldHours = entry.hours;
+        self.oldRole = entry.role;
     }
 
     afterEditEntry(entry: TimeTrackingEstimateEntry, type: BaseDataGridCreateDialogType, self: EstimatePageEstimatesGrid): IPromise<void> {
-        if (self.oldHours !== entry.hours) {
+        if (self.oldHours !== entry.hours || self.oldRole.name !== entry.role.name) {
             let diff = entry.hours - self.oldHours;
+            let costDiff = entry.hours * entry.role.cost - self.oldHours * self.oldRole.cost;
             return updateBudget(self.options.workItemId, (data) => {
                 data.assignedHours += diff;
-                data.assignedCost += diff * entry.role.cost;
+                data.assignedCost += costDiff;
             }).then(() => undefined);;
         } else {
             return Q(undefined);
