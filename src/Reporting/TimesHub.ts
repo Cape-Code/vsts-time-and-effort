@@ -97,7 +97,7 @@ export class TimesHub {
                 return values;
             };
 
-            let gridOptions = createHierarchyGridOptions(() => values, '1000px', '100%', 'date', 'desc', false, TimeTrackingCompleteEntryFactory.prototype.createGridColumns);
+            let gridOptions = createHierarchyGridOptions(() => values, 'calc(100% - 38px)', '100%', 'date', 'desc', false, TimeTrackingCompleteEntryFactory.prototype.createGridColumns);
 
             this.grid = create<Grid, IGridOptions>(Grid, container, gridOptions);
             this.wait.endWait();

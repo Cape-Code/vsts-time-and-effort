@@ -20,8 +20,7 @@ export class EstimatePageEstimatesGrid extends BasicDataGrid<TimeTrackingEstimat
             entityName: 'Estimate',
             sortIndex: 'role',
             workItemId: workItemId,
-            indexType: 'estimate',
-            height: '500px'
+            indexType: 'estimate'
         };
 
         super(gridOptions, new TimeTrackingEstimateEntryFactory());

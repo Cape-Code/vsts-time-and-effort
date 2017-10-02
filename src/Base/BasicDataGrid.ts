@@ -117,7 +117,7 @@ export abstract class BasicDataGrid<TEntity, TDocument extends IDocument<string,
                 return Array.from(doc.map.values()).filter((value) => { return this.filterValue(value, this.status); });
             };
 
-            let gridOptions = createGridOptions<TEntity, BasicDataGrid<TEntity, TDocument, TEntityFactory>>(dataFn, this.options.height ? this.options.height : '1000px', '100%', this.options.sortIndex, this.options.sortOrder ? this.options.sortOrder : 'asc', this.options.lastCellFills, this.factory.createGridColumns, this._editEntry, this._deleteEntry, this);
+            let gridOptions = createGridOptions<TEntity, BasicDataGrid<TEntity, TDocument, TEntityFactory>>(dataFn, this.options.height ? this.options.height : 'calc(100% - 38px)', '100%', this.options.sortIndex, this.options.sortOrder ? this.options.sortOrder : 'asc', this.options.lastCellFills, this.factory.createGridColumns, this._editEntry, this._deleteEntry, this);
 
             gridOptions.openRowDetail = (index: number) => {
                 this._editEntry(this.grid.getRowData(index), this);

@@ -11,8 +11,7 @@ export class TimesSettingsCustomerGrid extends BasicDataGrid<TimeTrackingCustome
             selector: '#timesCustomersContainer',
             entityName: 'Customer',
             sortIndex: 'name',
-            hasHiddenElements: true,
-            height: '500px'
+            hasHiddenElements: true
         };
 
         super(gridOptions, new TimeTrackingCustomerFactory());

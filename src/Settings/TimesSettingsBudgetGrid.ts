@@ -23,8 +23,7 @@ export class TimesSettingsBudgetGrid extends BasicDataGrid<TimeTrackingBudget, T
             selector: '#timesBudgetsContainer',
             entityName: 'Budget',
             sortIndex: 'name',
-            hasHiddenElements: true,
-            height: '500px'
+            hasHiddenElements: true
         };
 
         createFolderIfNotExists(getCurrentProject(), 'Tracked Budgets').then((folder) => {

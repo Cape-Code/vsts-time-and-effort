@@ -10,8 +10,7 @@ export class TimesSettingsRoleGrid extends BasicDataGrid<TimeTrackingRole, TimeT
         let gridOptions = <IBaseDataGridOptions>{
             selector: '#timesSettingsContainer',
             entityName: 'Role',
-            sortIndex: 'name',
-            height: '500px'
+            sortIndex: 'name'
         };
 
         super(gridOptions, new TimeTrackingRoleFactory());

@@ -38,7 +38,7 @@ export abstract class BasicHierarchyGrid<TEntity, TDocument extends IDocument<st
                 return [res];
             };
 
-            let gridOptions = createHierarchyGridOptions(dataFn, '1000px', '100%', 'workItemId', this.options.sortOrder ? this.options.sortOrder : 'asc', false, this.options.factory.createHierarchyGridColumns);
+            let gridOptions = createHierarchyGridOptions(dataFn, 'calc(100% - 38px)', '100%', 'workItemId', this.options.sortOrder ? this.options.sortOrder : 'asc', false, this.options.factory.createHierarchyGridColumns);
 
             gridOptions.openRowDetail = (index: number) => {
                 let data = this.grid.getRowData(index);
