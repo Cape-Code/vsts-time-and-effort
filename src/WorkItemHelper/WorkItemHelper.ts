@@ -1,9 +1,10 @@
+import { TimeTrackingRoleFactory, TimeTrackingRole } from './../Data/TimeTrackingRole';
 import { TimeTrackingBudgetAssignmentDocument, TimeTrackingBudgetAssignmentDocumentFactory } from './../Data/TimeTrackingBudgetAssignmentDocument';
 import { IBaseHierarchyGridOptions } from './../Base/BasicHierarchyGrid';
 import { TimeTrackingEstimateEntry, TimeTrackingEstimateEntryFactory } from './../Data/TimeTrackingEstimateEntry';
 import { IWorkItemHierarchy, TimeTrackingCompleteEntryHierarchy } from './WorkItemHelper';
 import { getNumberFormat } from 'VSS/Utils/Culture';
-import { TimeTrackingEntriesTimeIndex, TimeTrackingEntriesDocument, IDocument, IEntityFactory, TimeTrackingEstimateEntriesDocument } from './../Data/Contract';
+import { TimeTrackingEntriesTimeIndex, TimeTrackingEntriesDocument, IDocument, IEntityFactory, TimeTrackingEstimateEntriesDocument, TimeTrackingBudgetsDocument, TimeTrackingRolesDocument } from './../Data/Contract';
 import { TimeTrackingEntry, TimeTrackingEntryFactory } from './../Data/TimeTrackingEntry';
 import { TimeTrackingBudget } from './../Data/TimeTrackingBudget';
 import { TimeTrackingCompleteEntry } from './../Data/TimeTrackingCompleteEntry';
@@ -11,7 +12,7 @@ import { WorkItemTrackingHttpClient3_2, getClient } from 'TFS/WorkItemTracking/R
 import { WorkItemRelationType, WorkItem, WorkItemExpand } from 'TFS/WorkItemTracking/Contracts';
 import { TimeTrackingBudgetDataDocument, TimeTrackingBudgetDataDocumentFactory } from './../Data/TimeTrackingBudgetDataDocument';
 import * as Q from 'q';
-import { getGlobalTimeIndex, getTimeIndexById, getDocumentById, getCustomDocument, createCustomDocumentWithValue, updateCustomDocument, createCustomDocument, getCurrentProject } from '../Data/DataServiceHelper';
+import { getGlobalTimeIndex, getTimeIndexById, getDocumentById, getCustomDocument, createCustomDocumentWithValue, updateCustomDocument, createCustomDocument, getCurrentProject, updateDocument } from '../Data/DataServiceHelper';
 import { updateQuery } from "./QueryHelper";
 import { format } from "../Data/Date";
 
@@ -109,7 +110,7 @@ export function groupTimesByBudget(start: Date, end: Date): IPromise<TimeTrackin
 
             times.forEach((time) => {
                 let budget = map.get(time.workItemIdString);
-                addTimeToBudget(budget ? budget.id : '-', time, budget ? budget.name : '-', cache, result);
+                addTimeToBudget(budget ? budget.budget.id : '-', time, budget ? budget.budget.name : '-', cache, result);
             });
 
             return result;
@@ -144,17 +145,17 @@ function addTimeToBudget(id: string, entry: TimeTrackingCompleteEntry, name: str
     element.role = `${element.cost}${getNumberFormat().CurrencySymbol}`;
 }
 
-function createBudgetMap(workItemIds: Set<string>, map?: Map<string, TimeTrackingBudget>): IPromise<Map<string, TimeTrackingBudget>> {
+function createBudgetMap(workItemIds: Set<string>, map?: Map<string, TimeTrackingBudgetDataDocument>): IPromise<Map<string, TimeTrackingBudgetDataDocument>> {
     if (!map)
-        map = new Map<string, TimeTrackingBudget>();
+        map = new Map<string, TimeTrackingBudgetDataDocument>();
 
     if (workItemIds.size > 0) {
         let me = workItemIds.values().next().value;
         return getCustomDocument(TimeTrackingBudgetAssignmentDocumentFactory.prototype.createDocumentId(me.toString()), TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer).then((doc) => {
-            if (doc.budget) {
-                return getCustomDocument(doc.budget.budgetDataDocumentId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
+            if (doc.budgetDataId) {
+                return getCustomDocument(doc.budgetDataId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
                     data.workItems.forEach((workItemId) => {
-                        map.set(workItemId.toString(), doc.budget);
+                        map.set(workItemId.toString(), data);
                         workItemIds.delete(workItemId.toString());
                     });
 
@@ -242,8 +243,8 @@ export function getGlobalWorkItemTimes(start: Date, end: Date): IPromise<TimeTra
 
 export function updateBudget(workItemId: number, fnUpdate: (data: TimeTrackingBudgetDataDocument) => void): IPromise<TimeTrackingBudgetDataDocument> {
     return getCustomDocument(TimeTrackingBudgetAssignmentDocumentFactory.prototype.createDocumentId(workItemId.toString()), TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer).then((doc) => {
-        if (doc.budget) {
-            return getCustomDocument(doc.budget.budgetDataDocumentId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
+        if (doc.budgetDataId) {
+            return getCustomDocument(doc.budgetDataId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
                 fnUpdate(data);
                 return updateCustomDocument(data, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer, TimeTrackingBudgetDataDocumentFactory.prototype.serializer);
             });
@@ -258,8 +259,8 @@ export function loadBudgetAssignment(workItemId: number): IPromise<TimeTrackingB
     let id = TimeTrackingBudgetAssignmentDocumentFactory.prototype.createDocumentId(workItemId.toString());
 
     return getCustomDocument(id, TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer).then((doc) => {
-        if (doc.budget) {
-            return getCustomDocument(doc.budget.budgetDataDocumentId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => data);
+        if (doc.budgetDataId) {
+            return getCustomDocument(doc.budgetDataId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => data);
         } else {
             return Q(undefined);
         }
@@ -273,8 +274,8 @@ export function loadBudgetAssignment(workItemId: number): IPromise<TimeTrackingB
             if (parentId !== 0) {
                 return getCustomDocument(TimeTrackingBudgetAssignmentDocumentFactory.prototype.createDocumentId(parentId.toString()), TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer, true).then((doc) => {
                     return createCustomDocument(id, TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer).then((newDoc) => {
-                        if (doc.budget) {
-                            return reassignBudget(workItemId, newDoc, undefined, doc.budget);
+                        if (doc.budgetDataId) {
+                            return reassignBudget(workItemId, newDoc, undefined, doc.budgetDataId);
                         } else {
                             return Q(undefined);
                         }
@@ -289,77 +290,94 @@ export function loadBudgetAssignment(workItemId: number): IPromise<TimeTrackingB
     });
 }
 
-function assignBudget(workItemId: number, budget: TimeTrackingBudget, times: TimeTrackingEntriesDocument, estimates: TimeTrackingEstimateEntriesDocument, assignmentDoc: TimeTrackingBudgetAssignmentDocument): IPromise<TimeTrackingBudgetDataDocument> {
-    return getCustomDocument(budget.budgetDataDocumentId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
+function assignBudget(workItemId: number, budget: string, times: TimeTrackingEntriesDocument, estimates: TimeTrackingEstimateEntriesDocument, assignmentDoc: TimeTrackingBudgetAssignmentDocument): IPromise<TimeTrackingBudgetDataDocument> {
+    return getCustomDocument(budget, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
         data.workItems.add(workItemId);
 
         times.map.forEach((value, key) => {
+            if (data.roles.has(value.role.name))
+                value.role = data.roles.get(value.role.name);
+
             data.usedHours += value.hours;
             data.usedCost += value.role.cost * value.hours;
         });
 
         estimates.map.forEach((value, key) => {
+            if (data.roles.has(value.role.name))
+                value.role = data.roles.get(value.role.name);
+
             data.assignedHours += value.hours;
             data.assignedCost += value.role.cost * value.hours;
         });
 
         updateQuery(getCurrentProject(), data.queryId, Array.from(data.workItems));
 
-        assignmentDoc.budget = budget;
+        assignmentDoc.budgetDataId = budget;
 
         return Q.all([
             updateCustomDocument(assignmentDoc, TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer, TimeTrackingBudgetAssignmentDocumentFactory.prototype.serializer),
-            updateCustomDocument(data, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer, TimeTrackingBudgetDataDocumentFactory.prototype.serializer)
-        ]).spread((_, b: TimeTrackingBudgetDataDocument) => {
+            updateCustomDocument(data, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer, TimeTrackingBudgetDataDocumentFactory.prototype.serializer),
+            updateDocument(times, TimeTrackingEntryFactory.prototype.itemConstructor, TimeTrackingEntryFactory.prototype.itemSerializer),
+            updateDocument(estimates, TimeTrackingEstimateEntryFactory.prototype.itemConstructor, TimeTrackingEstimateEntryFactory.prototype.itemSerializer)
+        ]).spread((_, b: TimeTrackingBudgetDataDocument, uTimes, uEstimates) => {
             return b;
         });
     });
 }
 
-export function reassignBudgets(workItemIds: number[], newBudget: TimeTrackingBudget): IPromise<void> {
+export function reassignBudgets(workItemIds: number[], newBudget: string, roles: TimeTrackingRolesDocument): IPromise<void> {
     if (workItemIds.length > 0) {
-        return loadAndReassignBudget(workItemIds[0], newBudget).then(() => {
-            return reassignBudgets(workItemIds.splice(1), newBudget);
+        return loadAndReassignBudget(workItemIds[0], newBudget, roles).then(() => {
+            return reassignBudgets(workItemIds.splice(1), newBudget, roles);
         })
     } else {
         return Q(undefined);
     }
 }
 
-function loadAndReassignBudget(workItemId: number, newBudget: TimeTrackingBudget): IPromise<TimeTrackingBudgetDataDocument> {
+function loadAndReassignBudget(workItemId: number, newBudget: string, roles: TimeTrackingRolesDocument): IPromise<TimeTrackingBudgetDataDocument> {
     return getCustomDocument(TimeTrackingBudgetAssignmentDocumentFactory.prototype.createDocumentId(workItemId.toString()), TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer, true).then((assignment) => {
-        return reassignBudget(workItemId, assignment, assignment.budget, newBudget);
+        return reassignBudget(workItemId, assignment, assignment.budgetDataId, newBudget, roles);
     });
 }
 
-export function reassignBudget(workItemId: number, assignment?: TimeTrackingBudgetAssignmentDocument, oldBudget?: TimeTrackingBudget, newBudget?: TimeTrackingBudget): IPromise<TimeTrackingBudgetDataDocument> {
+export function reassignBudget(workItemId: number, assignment?: TimeTrackingBudgetAssignmentDocument, oldBudget?: string, newBudget?: string, roles?: TimeTrackingRolesDocument): IPromise<TimeTrackingBudgetDataDocument> {
     return Q.all([
-        oldBudget ? getCustomDocument(oldBudget.budgetDataDocumentId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer) : Q(undefined),
+        oldBudget ? getCustomDocument(oldBudget, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer) : Q(undefined),
         assignment ? Q(assignment) : getCustomDocument(TimeTrackingBudgetAssignmentDocumentFactory.prototype.createDocumentId(workItemId.toString()), TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer),
         getDocumentById<TimeTrackingEntriesDocument, string, TimeTrackingEntry>(TimeTrackingEntryFactory.prototype.createDocumentId(workItemId), TimeTrackingEntryFactory.prototype.itemConstructor),
-        getDocumentById<TimeTrackingEstimateEntriesDocument, string, TimeTrackingEstimateEntry>(TimeTrackingEstimateEntryFactory.prototype.createDocumentId(workItemId), TimeTrackingEstimateEntryFactory.prototype.itemConstructor)
-    ]).spread((data: TimeTrackingBudgetDataDocument, assignmentDoc: TimeTrackingBudgetAssignmentDocument, times: TimeTrackingEntriesDocument, estimates: TimeTrackingEstimateEntriesDocument) => {
+        getDocumentById<TimeTrackingEstimateEntriesDocument, string, TimeTrackingEstimateEntry>(TimeTrackingEstimateEntryFactory.prototype.createDocumentId(workItemId), TimeTrackingEstimateEntryFactory.prototype.itemConstructor),
+        roles ? Q(roles) : TimeTrackingRoleFactory.getRoles()
+    ]).spread((data: TimeTrackingBudgetDataDocument, assignmentDoc: TimeTrackingBudgetAssignmentDocument, times: TimeTrackingEntriesDocument, estimates: TimeTrackingEstimateEntriesDocument, rolesDoc: TimeTrackingRolesDocument) => {
         if (oldBudget) {
             data.workItems.delete(workItemId);
 
             times.map.forEach((value, key) => {
                 data.usedHours -= value.hours;
                 data.usedCost -= value.role.cost * value.hours;
+                value.role = rolesDoc.map.get(value.role.name);
             });
 
             estimates.map.forEach((value, key) => {
                 data.assignedHours -= value.hours;
                 data.assignedCost -= value.role.cost * value.hours;
+                value.role = rolesDoc.map.get(value.role.name);
             });
 
-            assignmentDoc.budget = undefined;
+            assignmentDoc.budgetDataId = undefined;
 
             return updateQuery(getCurrentProject(), data.queryId, Array.from(data.workItems)).then(() => {
                 return updateCustomDocument(data, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer, TimeTrackingBudgetDataDocumentFactory.prototype.serializer).then((doc) => {
                     if (newBudget) {
                         return assignBudget(workItemId, newBudget, times, estimates, assignmentDoc);
                     } else {
-                        return updateCustomDocument(assignmentDoc, TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer, TimeTrackingBudgetAssignmentDocumentFactory.prototype.serializer);
+                        return Q.all([
+                            updateDocument(times, TimeTrackingEntryFactory.prototype.itemConstructor, TimeTrackingEntryFactory.prototype.itemSerializer),
+                            updateDocument(estimates, TimeTrackingEstimateEntryFactory.prototype.itemConstructor, TimeTrackingEstimateEntryFactory.prototype.itemSerializer),
+                            updateCustomDocument(assignmentDoc, TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer, TimeTrackingBudgetAssignmentDocumentFactory.prototype.serializer)
+                        ]).spread((uTimes, uEstimates, uAssignmentDoc: TimeTrackingBudgetDataDocument) => {
+                            return uAssignmentDoc;
+                        });
                     }
                 });
             });
@@ -370,6 +388,64 @@ export function reassignBudget(workItemId: number, assignment?: TimeTrackingBudg
                 return Q(undefined);
             }
         }
+    });
+}
+
+export interface ITimeTrackingData {
+    bookings: ITimeTrackingDataValue;
+    estimates: ITimeTrackingDataValue;
+}
+
+export interface ITimeTrackingDataValue {
+    hours: number;
+    cost: number;
+}
+
+export function updateRoleRates(workItemId: number, roles: TimeTrackingRolesDocument, overriddenRoles: Map<string, TimeTrackingRole>): IPromise<ITimeTrackingData> {
+    return Q.all([
+        getDocumentById<TimeTrackingEntriesDocument, string, TimeTrackingEntry>(TimeTrackingEntryFactory.prototype.createDocumentId(workItemId), TimeTrackingEntryFactory.prototype.itemConstructor),
+        getDocumentById<TimeTrackingEstimateEntriesDocument, string, TimeTrackingEstimateEntry>(TimeTrackingEstimateEntryFactory.prototype.createDocumentId(workItemId), TimeTrackingEstimateEntryFactory.prototype.itemConstructor)
+    ]).spread((times: TimeTrackingEntriesDocument, estimates: TimeTrackingEstimateEntriesDocument) => {
+        let estimatedHours = 0;
+        let estimatedCost = 0;
+        let hours = 0;
+        let cost = 0;
+
+        times.map.forEach((value, key) => {
+            if (overriddenRoles.has(value.role.name))
+                value.role = overriddenRoles.get(value.role.name);
+            else if (roles.map.has(value.role.name))
+                value.role = roles.map.get(value.role.name);
+
+            hours += value.hours;
+            cost += value.hours * value.role.cost;
+        });
+
+        estimates.map.forEach((value, key) => {
+            if (overriddenRoles.has(value.role.name))
+                value.role = overriddenRoles.get(value.role.name);
+            else if (roles.map.has(value.role.name))
+                value.role = roles.map.get(value.role.name);
+
+            estimatedHours += value.hours;
+            estimatedCost += value.hours * value.role.cost;
+        });
+
+        return Q.all([
+            updateDocument(times, TimeTrackingEntryFactory.prototype.itemConstructor, TimeTrackingEntryFactory.prototype.itemSerializer),
+            updateDocument(estimates, TimeTrackingEstimateEntryFactory.prototype.itemConstructor, TimeTrackingEstimateEntryFactory.prototype.itemSerializer)
+        ]).spread((uTimes, uEstimates) => {
+            return {
+                bookings: {
+                    hours: hours,
+                    cost: cost
+                },
+                estimates: {
+                    hours: estimatedHours,
+                    cost: estimatedCost
+                }
+            }
+        });
     });
 }
 

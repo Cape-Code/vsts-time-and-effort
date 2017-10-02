@@ -1,3 +1,5 @@
+import { TimesSettingsBudgetRoleGrid } from './TimesSettingsBudgetRoleGrid';
+import { TimeTrackingRoleFactory } from './../Data/TimeTrackingRole';
 import { QueryHierarchyItem } from 'TFS/WorkItemTracking/Contracts';
 import { TimeTrackingBudgetAssignmentDocumentFactory } from './../Data/TimeTrackingBudgetAssignmentDocument';
 import { TimeTrackingBudgetDataDocument, TimeTrackingBudgetDataDocumentFactory } from './../Data/TimeTrackingBudgetDataDocument';
@@ -6,10 +8,11 @@ import { TimeTrackingBudgetsDocument, TimeTrackingCustomersDocument } from './..
 import { TimeTrackingBudget, TimeTrackingBudgetFactory } from './../Data/TimeTrackingBudget';
 import { BasicDataGrid, IBaseDataGridOptions, BaseDataGridCreateDialogType } from '../Base/BasicDataGrid';
 import { getCurrentProject, getDocument, deleteDocument, createCustomDocumentWithValue, getCustomDocument, updateCustomDocument } from '../Data/DataServiceHelper';
-import { addTextbox, addTextArea, addComboBox, addDatePicker, addNumber } from '../UIHelper/ModalDialogHelper';
+import { addTextbox, addTextArea, addComboBox, addDatePicker, addNumber, addTitle } from '../UIHelper/ModalDialogHelper';
 import { newGuid } from '../Data/Guid';
 import { parseDate } from '../Data/Date';
 import { createFolderIfNotExists, createQuery, deleteQuery } from '../WorkItemHelper/QueryHelper';
+import * as Q from "q";
 
 export class TimesSettingsBudgetGrid extends BasicDataGrid<TimeTrackingBudget, TimeTrackingBudgetsDocument, TimeTrackingBudgetFactory> {
     private customers: TimeTrackingCustomersDocument;
@@ -62,13 +65,20 @@ export class TimesSettingsBudgetGrid extends BasicDataGrid<TimeTrackingBudget, T
     }
 
     createDialogUIControls(dialogUI: JQuery<HTMLElement>, hasEntry: boolean, self: TimesSettingsBudgetGrid, type: BaseDataGridCreateDialogType, entry?: TimeTrackingBudget): IPromise<void> {
-        return self._getCustomers().then((customers) => {
+        return Q.all([
+            self._getCustomers(),
+            hasEntry ? getCustomDocument(entry.budgetDataDocumentId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer) : Q(undefined)
+        ]).spread((customers: TimeTrackingCustomersDocument, data: TimeTrackingBudgetDataDocument) => {
             addTextbox(dialogUI, 'Name', 'name', true, hasEntry ? entry.name : undefined, hasEntry);
             addComboBox(dialogUI, 'Customer', 'customer', true, hasEntry ? entry.customer : undefined, false, Array.from(customers.map.values()).filter((v) => { return v.isActive; }), (v) => v.name);
             addDatePicker(dialogUI, 'Start', 'start', true, hasEntry ? entry.start : new Date(), false);
             addDatePicker(dialogUI, 'End', 'end', true, hasEntry ? entry.end : new Date(), false);
             addNumber(dialogUI, 'Hours', 'hours', 0.0, 100000000.0, 0.25, true, hasEntry ? entry.hours : undefined, false);
             addNumber(dialogUI, 'Cost', 'cost', 0.0, 10000000000.0, 10.0, true, hasEntry ? entry.cost : undefined, false);
+
+            if (hasEntry)
+                new TimesSettingsBudgetRoleGrid(addTitle(dialogUI, 'Roles'), data);
+
             addTextArea(dialogUI, 'Description', 'description', false, hasEntry ? entry.description : undefined, false);
             return undefined;
         });
@@ -96,10 +106,12 @@ export class TimesSettingsBudgetGrid extends BasicDataGrid<TimeTrackingBudget, T
         }
     }
 
-    afterCreateEntry(entry: TimeTrackingBudget, type: BaseDataGridCreateDialogType, self: TimesSettingsBudgetGrid): void {
+    afterCreateEntry(entry: TimeTrackingBudget, type: BaseDataGridCreateDialogType, self: TimesSettingsBudgetGrid): IPromise<void> {
         entry.budgetDataDocumentId = TimeTrackingBudgetDataDocumentFactory.prototype.createDocumentId(newGuid());
-        createQuery(getCurrentProject(), entry.toString(), [], this.folder).then((query) => {
-            createCustomDocumentWithValue(new TimeTrackingBudgetDataDocument(entry.budgetDataDocumentId, entry, entry.hours, entry.cost, query.id, query._links.html.href), TimeTrackingBudgetDataDocumentFactory.prototype.deserializer, TimeTrackingBudgetDataDocumentFactory.prototype.serializer);
+        return createQuery(getCurrentProject(), entry.toString(), [], this.folder).then((query) => {
+            return TimeTrackingRoleFactory.getRoles().then((roles) => {
+                return createCustomDocumentWithValue(new TimeTrackingBudgetDataDocument(entry.budgetDataDocumentId, entry, query.id, query._links.html.href), TimeTrackingBudgetDataDocumentFactory.prototype.deserializer, TimeTrackingBudgetDataDocumentFactory.prototype.serializer);
+            });
         });
     }
 
@@ -110,27 +122,30 @@ export class TimesSettingsBudgetGrid extends BasicDataGrid<TimeTrackingBudget, T
     beforeEditEntry(entry: TimeTrackingBudget, type: BaseDataGridCreateDialogType, self: TimesSettingsBudgetGrid): void {
     }
 
-    afterEditEntry(entry: TimeTrackingBudget, type: BaseDataGridCreateDialogType, self: TimesSettingsBudgetGrid): void {
-        getCustomDocument(entry.budgetDataDocumentId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
-            data.budgetCost = entry.cost;
-            data.budgetHours = entry.hours;
+    afterEditEntry(entry: TimeTrackingBudget, type: BaseDataGridCreateDialogType, self: TimesSettingsBudgetGrid): IPromise<void> {
+        return getCustomDocument(entry.budgetDataDocumentId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
+            data.budget = entry;
 
-            updateCustomDocument(data, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer, TimeTrackingBudgetDataDocumentFactory.prototype.serializer);
+            return updateCustomDocument(data, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer, TimeTrackingBudgetDataDocumentFactory.prototype.serializer);
         });
     }
 
-    afterDeleteEntry(entry: TimeTrackingBudget, type: BaseDataGridCreateDialogType, self: TimesSettingsBudgetGrid): void {
-        getCustomDocument(entry.budgetDataDocumentId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
+    afterDeleteEntry(entry: TimeTrackingBudget, type: BaseDataGridCreateDialogType, self: TimesSettingsBudgetGrid): IPromise<void> {
+        return getCustomDocument(entry.budgetDataDocumentId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
+            let promises = [];
+
             data.workItems.forEach((value) => {
-                getCustomDocument(TimeTrackingBudgetAssignmentDocumentFactory.prototype.createDocumentId(value.toString()), TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer).then((doc) => {
-                    doc.budget = undefined;
-                    updateCustomDocument(doc, TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer, TimeTrackingBudgetAssignmentDocumentFactory.prototype.serializer);
-                });
+                promises.push(getCustomDocument(TimeTrackingBudgetAssignmentDocumentFactory.prototype.createDocumentId(value.toString()), TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer).then((doc) => {
+                    doc.budgetDataId = undefined;
+                    return updateCustomDocument(doc, TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer, TimeTrackingBudgetAssignmentDocumentFactory.prototype.serializer);
+                }));
             });
 
-            deleteQuery(getCurrentProject(), data.queryId);
-
-            deleteDocument(entry.budgetDataDocumentId);
+            return Q.all(promises).then(() => {
+                return deleteQuery(getCurrentProject(), data.queryId).then(() => {
+                    return deleteDocument(entry.budgetDataDocumentId);
+                });
+            });
         });
     }
 }

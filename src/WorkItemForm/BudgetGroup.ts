@@ -64,8 +64,8 @@ export class BudgetGroup {
                             if (budget) {
                                 containerEffort.show();
                                 containerCost.show();
-                                new BulletGraph(containerEffort, 'Effort', 'in hours', budget.budgetHours, budget.usedHours, budget.assignedHours, containerEffort[0].getBoundingClientRect().width);
-                                new BulletGraph(containerCost, 'Cost', `in ${getNumberFormat().CurrencySymbol}`, budget.budgetCost, budget.usedCost, budget.assignedCost, containerCost[0].getBoundingClientRect().width);
+                                new BulletGraph(containerEffort, 'Effort', 'in hours', budget.budget.hours, budget.usedHours, budget.assignedHours, containerEffort[0].getBoundingClientRect().width);
+                                new BulletGraph(containerCost, 'Cost', `in ${getNumberFormat().CurrencySymbol}`, budget.budget.cost, budget.usedCost, budget.assignedCost, containerCost[0].getBoundingClientRect().width);
                             } else {
                                 containerEffort.hide();
                                 containerCost.hide();
@@ -100,7 +100,7 @@ export class BudgetGroup {
                 indexChanged: (idx) => {
                     this.wait.startWait();
 
-                    reassignBudget(workItemId, undefined, initialValue, data[idx]).then((res) => {
+                    reassignBudget(workItemId, undefined, initialValue ? initialValue.budgetDataDocumentId : undefined, data[idx].budgetDataDocumentId).then((res) => {
                         this.service.isDirty().then((isDirty) => {
                             if (isDirty) {
                                 this.service.save().then(() => {

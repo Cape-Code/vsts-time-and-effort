@@ -53,7 +53,8 @@ export class TimesSettingsRoleGrid extends BasicDataGrid<TimeTrackingRole, TimeT
         }
     }
 
-    afterCreateEntry(entry: TimeTrackingRole, type: BaseDataGridCreateDialogType, self: TimesSettingsRoleGrid): void {
+    afterCreateEntry(entry: TimeTrackingRole, type: BaseDataGridCreateDialogType, self: TimesSettingsRoleGrid): IPromise<void> {
+        return Q(undefined);
     }
 
     determineEntityDialogType(entity: TimeTrackingRole): BaseDataGridCreateDialogType {
@@ -63,9 +64,11 @@ export class TimesSettingsRoleGrid extends BasicDataGrid<TimeTrackingRole, TimeT
     beforeEditEntry(entry: TimeTrackingRole, type: BaseDataGridCreateDialogType, self: TimesSettingsRoleGrid): void {
     }
 
-    afterEditEntry(entry: TimeTrackingRole, type: BaseDataGridCreateDialogType, self: TimesSettingsRoleGrid): void {
+    afterEditEntry(entry: TimeTrackingRole, type: BaseDataGridCreateDialogType, self: TimesSettingsRoleGrid): IPromise<void> {
+        return Q(undefined);
     }
 
-    afterDeleteEntry(entry: TimeTrackingRole, type: BaseDataGridCreateDialogType, self: TimesSettingsRoleGrid): void {
+    afterDeleteEntry(entry: TimeTrackingRole, type: BaseDataGridCreateDialogType, self: TimesSettingsRoleGrid): IPromise<void> {
+        return Q(undefined);
     }
 }

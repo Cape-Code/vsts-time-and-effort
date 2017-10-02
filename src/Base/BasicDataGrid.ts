@@ -13,10 +13,10 @@ import { create } from 'VSS/Controls';
 
 export abstract class BasicDataGrid<TEntity, TDocument extends IDocument<string, TEntity>, TEntityFactory extends IEntityFactory<TEntity, TDocument>> {
     protected document: TDocument;
-    private grid: Grid;
-    private wait: WaitControl;
-    private container: JQuery;
-    private notification: MessageAreaControl;
+    protected grid: Grid;
+    protected wait: WaitControl;
+    protected container: JQuery;
+    protected notification: MessageAreaControl;
     protected options: IBaseDataGridOptions;
     private factory: TEntityFactory;
     private status: boolean;
@@ -27,11 +27,11 @@ export abstract class BasicDataGrid<TEntity, TDocument extends IDocument<string,
     abstract createValue(container: JQuery, self: BasicDataGrid<TEntity, TDocument, TEntityFactory>, type: BaseDataGridCreateDialogType, entry?: TEntity): TEntity;
     abstract filterValue(value: TEntity, status: boolean): boolean;
 
-    abstract afterCreateEntry(entry: TEntity, type: BaseDataGridCreateDialogType, self: BasicDataGrid<TEntity, TDocument, TEntityFactory>): void;
+    abstract afterCreateEntry(entry: TEntity, type: BaseDataGridCreateDialogType, self: BasicDataGrid<TEntity, TDocument, TEntityFactory>): IPromise<void>;
     abstract determineEntityDialogType(entity: TEntity): BaseDataGridCreateDialogType;
     abstract beforeEditEntry(entry: TEntity, type: BaseDataGridCreateDialogType, self: BasicDataGrid<TEntity, TDocument, TEntityFactory>): void;
-    abstract afterEditEntry(entry: TEntity, type: BaseDataGridCreateDialogType, self: BasicDataGrid<TEntity, TDocument, TEntityFactory>): void;
-    abstract afterDeleteEntry(entry: TEntity, type: BaseDataGridCreateDialogType, self: BasicDataGrid<TEntity, TDocument, TEntityFactory>): void;
+    abstract afterEditEntry(entry: TEntity, type: BaseDataGridCreateDialogType, self: BasicDataGrid<TEntity, TDocument, TEntityFactory>): IPromise<void>;
+    abstract afterDeleteEntry(entry: TEntity, type: BaseDataGridCreateDialogType, self: BasicDataGrid<TEntity, TDocument, TEntityFactory>): IPromise<void>;
 
     constructor(gridOptions: IBaseDataGridOptions, factory: TEntityFactory) {
         this.options = gridOptions;
@@ -50,9 +50,9 @@ export abstract class BasicDataGrid<TEntity, TDocument extends IDocument<string,
             this.wait.startWait();
             this.document.map.set(this.getKey(value), value);
 
-            this.afterCreateEntry(value, this.determineEntityDialogType(value), this);
-
-            this._updateDocument(this);
+            this.afterCreateEntry(value, this.determineEntityDialogType(value), this).then(() => {
+                this._updateDocument(this);
+            });
         };
 
         let toggleFn = () => {
@@ -110,7 +110,7 @@ export abstract class BasicDataGrid<TEntity, TDocument extends IDocument<string,
 
     private _createGrid(container: JQuery): void {
         this.wait.startWait();
-        getDocument<TDocument, string, TEntity>(this.factory.createDocumentId(this.options.workItemId), { constructorFn: this.factory.itemConstructor, serializeFn: this.factory.itemSerializer, idForGlobalIndex: this.options.workItemId }).then((doc) => {
+        this._loadDocument().then((doc) => {
             this.document = doc;
 
             let dataFn = () => {
@@ -134,9 +134,9 @@ export abstract class BasicDataGrid<TEntity, TDocument extends IDocument<string,
         let okFn = (value: TEntity) => {
             self.wait.startWait();
 
-            self.afterEditEntry(entry, self.determineEntityDialogType(entry), self);
-
-            self._updateDocument(self);
+            self.afterEditEntry(entry, self.determineEntityDialogType(entry), self).then(() => {
+                self._updateDocument(self);
+            });
         };
 
         showModalDialog(self.container, `Edit ${self.options.entityName}`, 'Apply', okFn, self._createDialogUI, self.validate, self.createValue, self.determineEntityDialogType(entry), self, entry);
@@ -146,13 +146,17 @@ export abstract class BasicDataGrid<TEntity, TDocument extends IDocument<string,
         self.wait.startWait();
         self.document.map.delete(self.getKey(entry));
 
-        self.afterDeleteEntry(entry, self.determineEntityDialogType(entry), self);
-
-        self._updateDocument(self);
+        self.afterDeleteEntry(entry, self.determineEntityDialogType(entry), self).then(() => {
+            self._updateDocument(self);
+        });
     }
 
-    private _updateDocument(self: BasicDataGrid<TEntity, TDocument, TEntityFactory>): void {
-        updateDocument(self.document, self.factory.itemConstructor).then((doc) => {
+    protected _loadDocument(): IPromise<TDocument> {
+        return getDocument<TDocument, string, TEntity>(this.factory.createDocumentId(this.options.workItemId), { constructorFn: this.factory.itemConstructor, serializeFn: this.factory.itemSerializer, idForGlobalIndex: this.options.workItemId });
+    }
+
+    protected _updateDocument(self: BasicDataGrid<TEntity, TDocument, TEntityFactory>): void {
+        updateDocument(self.document, self.factory.itemConstructor, self.factory.itemSerializer).then((doc) => {
             self.document = doc;
             self.grid.setDataSource(Array.from(doc.map.values()));
             self.wait.endWait();

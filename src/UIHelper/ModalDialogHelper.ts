@@ -49,7 +49,7 @@ export function createModalDialogUI(container: JQuery): JQuery {
 }
 
 export function addTextbox(container: JQuery, title: string, id: string, isRequired: boolean, initialValue: string, isDisabled: boolean): JQuery {
-    let p = _addTitle(container, title);
+    let p = addTitle(container, title);
     let textBox = $(`<input id="${id}" type="text" ${isRequired ? 'required="required" ' : ''}${isDisabled ? 'disabled="disabled" ' : ''}/>`);
 
     if (initialValue) {
@@ -61,7 +61,7 @@ export function addTextbox(container: JQuery, title: string, id: string, isRequi
 }
 
 export function addToggle(container: JQuery, title: string, id: string, initialValue: boolean, isDisabled: boolean): JQuery {
-    let p = _addTitle(container, title);
+    let p = addTitle(container, title);
     let toggle = $(`<input id="${id}" type="checkbox" ${isDisabled ? 'disabled="disabled" ' : ''}${initialValue ? 'checked="checked" ' : ''}/>`);
 
     toggle.click(function () {
@@ -75,7 +75,7 @@ export function addToggle(container: JQuery, title: string, id: string, initialV
 }
 
 export function addNumber(container: JQuery, title: string, id: string, min: number, max: number, step: number, isRequired: boolean, initialValue: number, isDisabled: boolean): JQuery {
-    let p = _addTitle(container, title);
+    let p = addTitle(container, title);
     let numberInput = $(`<input id="${id}" type="number" min="${min}" max="${max}" step="${step}" ${isRequired ? 'required="required" ' : ''}${isDisabled ? 'disabled="disabled" ' : ''}class="input-text-box" />`);
 
     if (initialValue) {
@@ -87,7 +87,7 @@ export function addNumber(container: JQuery, title: string, id: string, min: num
 }
 
 export function addComboBox<T>(container: JQuery, title: string, id: string, isRequired: boolean, initialValue: T, isDisabled: boolean, data: T[], selector: (t: T) => string): JQuery {
-    let p = _addTitle(container, title);
+    let p = addTitle(container, title);
 
     if (initialValue === undefined && data.length === 1)
         initialValue = data[0];
@@ -108,7 +108,7 @@ export function addComboBox<T>(container: JQuery, title: string, id: string, isR
 }
 
 export function addTreePicker(container: JQuery, title: string, id: string, isRequired: boolean, isDisabled: boolean, data: any): JQuery {
-    let p = _addTitle(container, title);
+    let p = addTitle(container, title);
 
     let options: IComboOptions = {
         id: id,
@@ -126,7 +126,7 @@ export function addTreePicker(container: JQuery, title: string, id: string, isRe
 }
 
 export function addDatePicker(container: JQuery, title: string, id: string, isRequired: boolean, initialValue: Date | string, isDisabled: boolean): JQuery {
-    let p = _addTitle(container, title);
+    let p = addTitle(container, title);
     let datePicker = $(`<input id="${id}" type="text" ${isRequired ? 'required="required" ' : ''}${isDisabled ? 'disabled="disabled" ' : ''}/>`);
     p.append(datePicker);
 
@@ -146,7 +146,7 @@ export function addDatePicker(container: JQuery, title: string, id: string, isRe
 }
 
 export function addTextArea(container: JQuery, title: string, id: string, isRequired: boolean, initialValue: string, isDisabled: boolean): JQuery {
-    let p = _addTitle(container, title);
+    let p = addTitle(container, title);
     let textArea = $(`<textarea id="${id}" ${isRequired ? 'required="required" ' : ''}${isDisabled ? 'disabled="disabled" ' : ''}/>`);
 
     if (initialValue) {
@@ -157,7 +157,7 @@ export function addTextArea(container: JQuery, title: string, id: string, isRequ
     return container;
 }
 
-function _addTitle(container: JQuery, title: string): JQuery {
+export function addTitle(container: JQuery, title: string): JQuery {
     let titleElem = $(`<p><label>${title}:</label></p>`);
     container.append(titleElem);
     return titleElem;

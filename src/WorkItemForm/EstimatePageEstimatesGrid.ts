@@ -1,3 +1,5 @@
+import { TimeTrackingBudgetDataDocumentFactory } from './../Data/TimeTrackingBudgetDataDocument';
+import { TimeTrackingBudgetAssignmentDocument, TimeTrackingBudgetAssignmentDocumentFactory } from './../Data/TimeTrackingBudgetAssignmentDocument';
 import { TimeTrackingRoleFactory } from './../Data/TimeTrackingRole';
 import { IBaseDataGridOptions } from './../Base/BasicDataGrid';
 import { TimeTrackingEstimateEntry, TimeTrackingEstimateEntryFactory } from './../Data/TimeTrackingEstimateEntry';
@@ -6,7 +8,7 @@ import { BasicDataGrid, BaseDataGridCreateDialogType } from '../Base/BasicDataGr
 import { addComboBox, addNumber, addTextArea, addTreePicker } from '../UIHelper/ModalDialogHelper';
 import { newGuid } from '../Data/Guid';
 import { getWorkItemAncestorHierarchy, IWorkItemInfo, updateBudget } from '../WorkItemHelper/WorkItemHelper';
-import { getDocument } from '../Data/DataServiceHelper';
+import { getDocument, getCustomDocument } from '../Data/DataServiceHelper';
 import * as Q from 'q';
 
 export class EstimatePageEstimatesGrid extends BasicDataGrid<TimeTrackingEstimateEntry, TimeTrackingEstimateEntriesDocument, TimeTrackingEstimateEntryFactory> {
@@ -18,16 +20,31 @@ export class EstimatePageEstimatesGrid extends BasicDataGrid<TimeTrackingEstimat
             entityName: 'Estimate',
             sortIndex: 'role',
             workItemId: workItemId,
-            indexType: 'estimate'
+            indexType: 'estimate',
+            height: '750px'
         };
 
         super(gridOptions, new TimeTrackingEstimateEntryFactory());
     }
 
     private _getRoles(): IPromise<TimeTrackingRolesDocument> {
-        return TimeTrackingRoleFactory.getRoles().then((roles) => {
-            this.roles = roles;
-            return roles;
+        return Q.all([
+            TimeTrackingRoleFactory.getRoles(),
+            getCustomDocument(TimeTrackingBudgetAssignmentDocumentFactory.prototype.createDocumentId(this.options.workItemId.toString()), TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer),
+        ]).spread((roles: TimeTrackingRolesDocument, assignment: TimeTrackingBudgetAssignmentDocument) => {
+            if (assignment.budgetDataId) {
+                return getCustomDocument(assignment.budgetDataId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
+                    data.roles.forEach((value, key) => {
+                        roles.map.set(key, value);
+                    });
+
+                    this.roles = roles;
+                    return roles;
+                });
+            } else {
+                this.roles = roles;
+                return roles;
+            }
         });
     }
 
@@ -104,11 +121,11 @@ export class EstimatePageEstimatesGrid extends BasicDataGrid<TimeTrackingEstimat
         }
     }
 
-    afterCreateEntry(entry: TimeTrackingEstimateEntry, type: BaseDataGridCreateDialogType, self: EstimatePageEstimatesGrid): void {
-        updateBudget(self.options.workItemId, (data) => {
+    afterCreateEntry(entry: TimeTrackingEstimateEntry, type: BaseDataGridCreateDialogType, self: EstimatePageEstimatesGrid): IPromise<void> {
+        return updateBudget(self.options.workItemId, (data) => {
             data.assignedHours += entry.hours;
             data.assignedCost += entry.hours * entry.role.cost;
-        });
+        }).then(() => undefined);
     }
 
     determineEntityDialogType(entity: TimeTrackingEstimateEntry): BaseDataGridCreateDialogType {
@@ -121,20 +138,22 @@ export class EstimatePageEstimatesGrid extends BasicDataGrid<TimeTrackingEstimat
         self.oldHours = entry.hours;
     }
 
-    afterEditEntry(entry: TimeTrackingEstimateEntry, type: BaseDataGridCreateDialogType, self: EstimatePageEstimatesGrid): void {
+    afterEditEntry(entry: TimeTrackingEstimateEntry, type: BaseDataGridCreateDialogType, self: EstimatePageEstimatesGrid): IPromise<void> {
         if (self.oldHours !== entry.hours) {
             let diff = entry.hours - self.oldHours;
-            updateBudget(self.options.workItemId, (data) => {
+            return updateBudget(self.options.workItemId, (data) => {
                 data.assignedHours += diff;
                 data.assignedCost += diff * entry.role.cost;
-            });
+            }).then(() => undefined);;
+        } else {
+            return Q(undefined);
         }
     }
 
-    afterDeleteEntry(entry: TimeTrackingEstimateEntry, type: BaseDataGridCreateDialogType, self: EstimatePageEstimatesGrid): void {
-        updateBudget(self.options.workItemId, (data) => {
+    afterDeleteEntry(entry: TimeTrackingEstimateEntry, type: BaseDataGridCreateDialogType, self: EstimatePageEstimatesGrid): IPromise<void> {
+        return updateBudget(self.options.workItemId, (data) => {
             data.assignedHours -= entry.hours;
             data.assignedCost -= entry.hours * entry.role.cost;
-        });
+        }).then(() => undefined);
     }
 }

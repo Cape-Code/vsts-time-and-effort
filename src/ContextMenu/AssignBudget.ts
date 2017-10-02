@@ -1,3 +1,4 @@
+import { TimeTrackingRoleFactory } from './../Data/TimeTrackingRole';
 import { TimeTrackingBudget, TimeTrackingBudgetFactory } from './../Data/TimeTrackingBudget';
 import { reassignBudgets } from "../WorkItemHelper/WorkItemHelper";
 
@@ -31,9 +32,11 @@ function _handleClick(actionContext: any): void {
 
     let showNotice = workItemIds.length > 4;
 
-    reassignBudgets(workItemIds, this.__budget).then(() => {
-        if (showNotice)
-            alert('Budget assigned');
+    TimeTrackingRoleFactory.getRoles().then((roles) => {
+        reassignBudgets(workItemIds, this.__budget, roles).then(() => {
+            if (showNotice)
+                alert('Budget assigned');
+        });
     });
 }
 

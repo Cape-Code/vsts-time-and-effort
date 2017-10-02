@@ -2,20 +2,22 @@ import { TimeTrackingBudget, TimeTrackingBudgetFactory } from './TimeTrackingBud
 import { ICustomDocument, ICustomDocumentFactory } from './Contract';
 
 export class TimeTrackingBudgetAssignmentDocument implements ICustomDocument {
-    constructor(public id: string, public budget?: TimeTrackingBudget) {
+    constructor(public id: string, public budgetDataId?: string) {
     }
 }
 
 export class TimeTrackingBudgetAssignmentDocumentFactory implements ICustomDocumentFactory<TimeTrackingBudgetAssignmentDocument> {
     deserializer(x: any): TimeTrackingBudgetAssignmentDocument {
-        if (x.budget)
+        if (x.budget) {
             x.budget = TimeTrackingBudgetFactory.prototype.itemConstructor(x.budget);
+            x.budgetDataId = x.budget.budgetDataDocumentId;
+        }
         return <TimeTrackingBudgetAssignmentDocument>x;
     }
 
     serializer(x: any): any {
         if (x.budget)
-            x.budget = TimeTrackingBudgetFactory.prototype.itemSerializer(x.budget);
+            x.budget = undefined;
         return x;
     }
 

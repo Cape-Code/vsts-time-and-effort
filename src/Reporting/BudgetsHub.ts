@@ -46,8 +46,8 @@ export class BudgetsHub {
                             container.append(element);
                             element.append($(`<div class="title"><a href="${value.queryLink}" target="_parent">${value.budget.name} (${value.budget.customer.name})</a></div>`));
                             element.append($(`<div class="dates">${format(value.budget.start)} - ${format(value.budget.end)}</div>`));
-                            new BulletGraph(element, 'Effort', 'in hours', value.budgetHours, value.usedHours, value.assignedHours, element[0].getBoundingClientRect().width, false);
-                            new BulletGraph(element, 'Cost', `in ${getNumberFormat().CurrencySymbol}`, value.budgetCost, value.usedCost, value.assignedCost, element[0].getBoundingClientRect().width, false);
+                            new BulletGraph(element, 'Effort', 'in hours', value.budget.hours, value.usedHours, value.assignedHours, element[0].getBoundingClientRect().width, false);
+                            new BulletGraph(element, 'Cost', `in ${getNumberFormat().CurrencySymbol}`, value.budget.cost, value.usedCost, value.assignedCost, element[0].getBoundingClientRect().width, false);
                         });
 
                         this.wait.endWait();

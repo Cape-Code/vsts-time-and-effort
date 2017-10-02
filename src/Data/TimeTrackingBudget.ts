@@ -1,3 +1,4 @@
+import { TimeTrackingRole, TimeTrackingRoleFactory } from './TimeTrackingRole';
 import { IExcelColumnFormatOptions } from './../Export/ExcelHelper';
 import { getDateTimeFormat, getNumberFormat } from 'VSS/Utils/Culture';
 import { parseDateString } from 'VSS/Utils/Date';

@@ -1,13 +1,16 @@
+import { TimeTrackingBudgetDataDocumentFactory } from './../Data/TimeTrackingBudgetDataDocument';
+import { TimeTrackingBudgetAssignmentDocumentFactory, TimeTrackingBudgetAssignmentDocument } from './../Data/TimeTrackingBudgetAssignmentDocument';
 import { TimeTrackingRoleFactory } from './../Data/TimeTrackingRole';
 import { TimeTrackingEntryFactory, TimeTrackingEntry } from './../Data/TimeTrackingEntry';
 import { IBaseDataGridOptions } from './../Base/BasicDataGrid';
-import { TimeTrackingRolesDocument, TimeTrackingEntriesDocument } from './../Data/Contract';
+import { TimeTrackingRolesDocument, TimeTrackingEntriesDocument, TimeTrackingEntriesTimeIndex } from './../Data/Contract';
 import { BasicDataGrid, BaseDataGridCreateDialogType } from '../Base/BasicDataGrid';
 import { addComboBox, addNumber, addTextArea, addTextbox, addDatePicker } from '../UIHelper/ModalDialogHelper';
 import { newGuid } from '../Data/Guid';
 import { parseDate } from '../Data/Date';
-import { getTimeIndex, updateDocument, getCurrentProject } from '../Data/DataServiceHelper';
+import { getTimeIndex, updateDocument, getCurrentProject, getCustomDocument } from '../Data/DataServiceHelper';
 import { updateBudget } from "../WorkItemHelper/WorkItemHelper";
+import * as Q from "q";
 
 export class TimesPageTimesGrid extends BasicDataGrid<TimeTrackingEntry, TimeTrackingEntriesDocument, TimeTrackingEntryFactory> {
     private roles: TimeTrackingRolesDocument;
@@ -20,16 +23,31 @@ export class TimesPageTimesGrid extends BasicDataGrid<TimeTrackingEntry, TimeTra
             sortOrder: 'desc',
             workItemId: workItemId,
             indexType: 'time',
-            enableExport: true
+            enableExport: true,
+            height: '750px'
         };
 
         super(gridOptions, new TimeTrackingEntryFactory());
     }
 
     private _getRoles(): IPromise<TimeTrackingRolesDocument> {
-        return TimeTrackingRoleFactory.getRoles().then((roles) => {
-            this.roles = roles;
-            return roles;
+        return Q.all([
+            TimeTrackingRoleFactory.getRoles(),
+            getCustomDocument(TimeTrackingBudgetAssignmentDocumentFactory.prototype.createDocumentId(this.options.workItemId.toString()), TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer),
+        ]).spread((roles: TimeTrackingRolesDocument, assignment: TimeTrackingBudgetAssignmentDocument) => {
+            if (assignment.budgetDataId) {
+                return getCustomDocument(assignment.budgetDataId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
+                    data.roles.forEach((value, key) => {
+                        roles.map.set(key, value);
+                    });
+
+                    this.roles = roles;
+                    return roles;
+                });
+            } else {
+                this.roles = roles;
+                return roles;
+            }
         });
     }
 
@@ -81,12 +99,12 @@ export class TimesPageTimesGrid extends BasicDataGrid<TimeTrackingEntry, TimeTra
         }
     }
 
-    afterCreateEntry(entry: TimeTrackingEntry, type: BaseDataGridCreateDialogType, self: TimesPageTimesGrid): void {
-        self._updateTimeIndex(entry, self, false);
-
-        updateBudget(self.options.workItemId, (data) => {
-            data.usedHours += entry.hours;
-            data.usedCost += entry.hours * entry.role.cost;
+    afterCreateEntry(entry: TimeTrackingEntry, type: BaseDataGridCreateDialogType, self: TimesPageTimesGrid): IPromise<void> {
+        return self._updateTimeIndex(entry, self, false).then(() => {
+            return updateBudget(self.options.workItemId, (data) => {
+                data.usedHours += entry.hours;
+                data.usedCost += entry.hours * entry.role.cost;
+            }).then(() => undefined);
         });
     }
 
@@ -100,19 +118,21 @@ export class TimesPageTimesGrid extends BasicDataGrid<TimeTrackingEntry, TimeTra
         self.oldHours = entry.hours;
     }
 
-    afterEditEntry(entry: TimeTrackingEntry, type: BaseDataGridCreateDialogType, self: TimesPageTimesGrid): void {
-        self._updateTimeIndex(entry, self, false);
-
-        if (self.oldHours !== entry.hours) {
-            let diff = entry.hours - self.oldHours;
-            updateBudget(self.options.workItemId, (data) => {
-                data.usedHours += diff;
-                data.usedCost += diff * entry.role.cost;
-            });
-        }
+    afterEditEntry(entry: TimeTrackingEntry, type: BaseDataGridCreateDialogType, self: TimesPageTimesGrid): IPromise<void> {
+        return self._updateTimeIndex(entry, self, false).then(() => {
+            if (self.oldHours !== entry.hours) {
+                let diff = entry.hours - self.oldHours;
+                return updateBudget(self.options.workItemId, (data) => {
+                    data.usedHours += diff;
+                    data.usedCost += diff * entry.role.cost;
+                }).then(() => undefined);
+            } else {
+                return undefined;
+            }
+        });
     }
 
-    afterDeleteEntry(entry: TimeTrackingEntry, type: BaseDataGridCreateDialogType, self: TimesPageTimesGrid): void {
+    afterDeleteEntry(entry: TimeTrackingEntry, type: BaseDataGridCreateDialogType, self: TimesPageTimesGrid): IPromise<void> {
         let remove = true;
         let year = entry.date.getFullYear();
         let month = entry.date.getMonth();
@@ -122,24 +142,24 @@ export class TimesPageTimesGrid extends BasicDataGrid<TimeTrackingEntry, TimeTra
                 remove = false;
             }
         });
-        self._updateTimeIndex(entry, self, remove);
-
-        updateBudget(self.options.workItemId, (data) => {
-            data.usedHours -= entry.hours;
-            data.usedCost -= entry.hours * entry.role.cost;
+        return self._updateTimeIndex(entry, self, remove).then(() => {
+            return updateBudget(self.options.workItemId, (data) => {
+                data.usedHours -= entry.hours;
+                data.usedCost -= entry.hours * entry.role.cost;
+            }).then(() => undefined);
         });
     }
 
-    private _updateTimeIndex(entry: TimeTrackingEntry, self: TimesPageTimesGrid, remove: boolean): void {
-        getTimeIndex(entry.date.getFullYear(), entry.date.getMonth()).then((index) => {
+    private _updateTimeIndex(entry: TimeTrackingEntry, self: TimesPageTimesGrid, remove: boolean): IPromise<TimeTrackingEntriesTimeIndex> {
+        return getTimeIndex(entry.date.getFullYear(), entry.date.getMonth()).then((index) => {
             if (remove) {
                 if (index.map.has(self.options.workItemId)) {
                     index.map.delete(self.options.workItemId);
-                    updateDocument(index);
+                    return updateDocument(index);
                 }
             } else if (!index.map.has(self.options.workItemId)) {
                 index.map.set(self.options.workItemId, TimeTrackingEntryFactory.prototype.createDocumentId(self.options.workItemId));
-                updateDocument(index);
+                return updateDocument(index);
             }
         });
     }

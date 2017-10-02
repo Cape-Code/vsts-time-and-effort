@@ -54,7 +54,8 @@ export class TimesSettingsCustomerGrid extends BasicDataGrid<TimeTrackingCustome
         }
     }
 
-    afterCreateEntry(entry: TimeTrackingCustomer, type: BaseDataGridCreateDialogType, self: TimesSettingsCustomerGrid): void {
+    afterCreateEntry(entry: TimeTrackingCustomer, type: BaseDataGridCreateDialogType, self: TimesSettingsCustomerGrid): IPromise<void> {
+        return Q(undefined);
     }
 
     determineEntityDialogType(entity: TimeTrackingCustomer): BaseDataGridCreateDialogType {
@@ -64,9 +65,11 @@ export class TimesSettingsCustomerGrid extends BasicDataGrid<TimeTrackingCustome
     beforeEditEntry(entry: TimeTrackingCustomer, type: BaseDataGridCreateDialogType, self: TimesSettingsCustomerGrid): void {
     }
 
-    afterEditEntry(entry: TimeTrackingCustomer, type: BaseDataGridCreateDialogType, self: TimesSettingsCustomerGrid): void {
+    afterEditEntry(entry: TimeTrackingCustomer, type: BaseDataGridCreateDialogType, self: TimesSettingsCustomerGrid): IPromise<void> {
+        return Q(undefined);
     }
 
-    afterDeleteEntry(entry: TimeTrackingCustomer, type: BaseDataGridCreateDialogType, self: TimesSettingsCustomerGrid): void {
+    afterDeleteEntry(entry: TimeTrackingCustomer, type: BaseDataGridCreateDialogType, self: TimesSettingsCustomerGrid): IPromise<void> {
+        return Q(undefined);
     }
 }
