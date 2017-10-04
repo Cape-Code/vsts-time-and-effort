@@ -67,7 +67,7 @@ export class TimeTrackingEntryFactory implements IEntityFactory<TimeTrackingEntr
         ];
     }
 
-    createExportColumns(): [(t: TimeTrackingEntry) => string | number | boolean | Date, IExcelColumnFormatOptions][] {
+    createExportColumns(exportType?: string): [(t: TimeTrackingEntry) => string | number | boolean | Date, IExcelColumnFormatOptions][] {
         return [
             [(t: TimeTrackingEntry) => t.person, { title: 'Person' }],
             [(t: TimeTrackingEntry) => t.role.name, { title: 'Role' }],

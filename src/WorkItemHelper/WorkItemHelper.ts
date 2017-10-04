@@ -133,9 +133,11 @@ function addTimeToBudget(id: string, entry: TimeTrackingCompleteEntry, name: str
 
     if (cache.has(id)) {
         element = cache.get(id);
+        entry.budget = element.workItemName;
         element.children.push(entry);
     } else {
         element = <TimeTrackingCompleteEntryHierarchy>{ type: 'Budget', workItemName: name, children: [entry], item: undefined, workItemId: 0, title: name, workItemType: 'Budget', workItemIdString: '', cost: 0, hours: 0 };
+        entry.budget = element.workItemName;
         cache.set(id, element);
         result.push(element);
     }

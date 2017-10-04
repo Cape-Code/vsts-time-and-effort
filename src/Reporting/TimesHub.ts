@@ -68,7 +68,7 @@ export class TimesHub {
         };
 
         let exportFn: (self: TimesHub) => [TimeTrackingCompleteEntry[], [{ (t: TimeTrackingCompleteEntry): number | string | Date | boolean; }, IExcelColumnFormatOptions][]] = (self: TimesHub) => {
-            return [self.grid._dataSource, TimeTrackingCompleteEntryFactory.prototype.createExportColumns()];
+            return [self.grid._dataSource.filter((e) => e.id), TimeTrackingCompleteEntryFactory.prototype.createExportColumns(this.groupByState)];
         }
 
         createMenuBar({

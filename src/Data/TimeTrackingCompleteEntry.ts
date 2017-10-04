@@ -8,6 +8,7 @@ export class TimeTrackingCompleteEntry extends TimeTrackingEntry {
     public workItemType: string;
     public title: string;
     public icon: string;
+    public budget: string;
 }
 
 export class TimeTrackingCompleteEntryFactory extends TimeTrackingEntryFactory {
@@ -42,13 +43,16 @@ export class TimeTrackingCompleteEntryFactory extends TimeTrackingEntryFactory {
         return columns;
     }
 
-    createExportColumns(): [(t: TimeTrackingEntry) => string | number | boolean | Date, IExcelColumnFormatOptions][] {
+    createExportColumns(exportType: 'budget' | 'person'): [(t: TimeTrackingEntry) => string | number | boolean | Date, IExcelColumnFormatOptions][] {
         let columns: [{ (t: TimeTrackingCompleteEntry): number | string | Date | boolean; }, IExcelColumnFormatOptions][] = [
             [(t: TimeTrackingCompleteEntry) => t.workItemIdString, { title: 'Id' }],
             [(t: TimeTrackingCompleteEntry) => t.workItemType, { title: 'Type' }],
             [(t: TimeTrackingCompleteEntry) => t.title, { title: 'Title' }]
         ];
 
-        return columns.concat(TimeTrackingEntryFactory.prototype.createExportColumns());
+        if (exportType === 'budget')
+            columns.push([(t: TimeTrackingCompleteEntry) => t.budget, { title: 'Budget' }]);
+
+        return columns.concat(TimeTrackingEntryFactory.prototype.createExportColumns(exportType));
     }
 }

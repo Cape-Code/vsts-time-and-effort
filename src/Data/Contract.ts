@@ -30,7 +30,7 @@ export interface IEntityFactory<TEntity, TDocument extends IDocument<string, TEn
     createGridColumns(): IGridColumn[];
     createHierarchyGridColumns(): IGridColumn[];
     createDocumentId(workItemId?: number): string;
-    createExportColumns(): [{ (t: TEntity): number | string | Date | boolean; }, IExcelColumnFormatOptions][];
+    createExportColumns(exportType?: string): [{ (t: TEntity): number | string | Date | boolean; }, IExcelColumnFormatOptions][];
 }
 
 export interface ICustomDocumentFactory<TDocument extends ICustomDocument> {
