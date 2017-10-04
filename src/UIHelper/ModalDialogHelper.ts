@@ -4,14 +4,14 @@ import { parseDate, format } from '../Data/Date';
 import { Enhancement, create } from 'VSS/Controls';
 import { ComboTreeBehaviorName } from 'VSS/Controls/TreeView';
 
-export function showModalDialog<T, U, V>(container: JQuery, dialogTitle: string, okText: string, okFn: (value: T) => void, createDialogUIFn: (container: JQuery, self: U, type: V, entry: T) => IPromise<JQuery>, validateFn: (dialogElement: JQuery, type: V) => boolean, valueFn: (dialogElment: JQuery, self: U, type: V, entry: T) => T, type: V, self: U, entry?: T): void {
+export function showModalDialog<T, U, V>(container: JQuery, dialogTitle: string, okText: string, okFn: (value: T) => void, createDialogUIFn: (container: JQuery, self: U, type: V, entry: T) => IPromise<JQuery>, validateFn: (dialogElement: JQuery, type: V, entry: T) => boolean, valueFn: (dialogElment: JQuery, self: U, type: V, entry: T) => T, type: V, self: U, entry?: T): void {
     createDialogUIFn(container, self, type, entry).then((content) => {
         let dialogOptions = _createModalDialogOptions<T>(okText, okFn, dialogTitle, content);
         let dialog = show(ModalDialog, dialogOptions);
         let dialogElement = dialog.getElement();
 
         let onBlur = () => {
-            if (validateFn(dialogElement, type)) {
+            if (validateFn(dialogElement, type, entry)) {
                 dialog.setDialogResult(valueFn(dialogElement, self, type, entry));
                 dialog.updateOkButton(true);
             } else {
@@ -86,10 +86,10 @@ export function addNumber(container: JQuery, title: string, id: string, min: num
     return container;
 }
 
-export function addComboBox<T>(container: JQuery, title: string, id: string, isRequired: boolean, initialValue: T, isDisabled: boolean, data: T[], selector: (t: T) => string): JQuery {
+export function addComboBox<T>(container: JQuery, title: string, id: string, isRequired: boolean, initialValue: T, isDisabled: boolean, data: T[], selector: (t: T) => string, change?: () => void, noAutoSelect: boolean = false): Combo {
     let p = addTitle(container, title);
 
-    if (initialValue === undefined && data.length === 1)
+    if (!noAutoSelect && initialValue === undefined && data.length === 1)
         initialValue = data[0];
 
     let options: IComboOptions = {
@@ -99,30 +99,11 @@ export function addComboBox<T>(container: JQuery, title: string, id: string, isR
         mode: 'drop',
         source: data.map((v) => selector(v)),
         value: initialValue ? selector(initialValue) : undefined,
-        disableTextSelectOnFocus: true
+        disableTextSelectOnFocus: true,
+        change: change
     };
 
-    create(Combo, p, options);
-
-    return container;
-}
-
-export function addTreePicker(container: JQuery, title: string, id: string, isRequired: boolean, isDisabled: boolean, data: any): JQuery {
-    let p = addTitle(container, title);
-
-    let options: IComboOptions = {
-        id: id,
-        allowEdit: false,
-        enabled: !isDisabled,
-        mode: 'drop',
-        type: ComboTreeBehaviorName,
-        source: data,
-        disableTextSelectOnFocus: true
-    }
-
-    create(Combo, p, options);
-
-    return container;
+    return create(Combo, p, options);
 }
 
 export function addDatePicker(container: JQuery, title: string, id: string, isRequired: boolean, initialValue: Date | string, isDisabled: boolean): JQuery {

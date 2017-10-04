@@ -24,8 +24,8 @@ export class TimesSettingsRoleGrid extends BasicDataGrid<TimeTrackingRole, TimeT
         return true;
     }
 
-    validate(container: JQuery, type: BaseDataGridCreateDialogType, validateNew?: boolean, self?: TimesSettingsRoleGrid): boolean {
-        if (validateNew) {
+    validate(container: JQuery, type: BaseDataGridCreateDialogType, entry?: TimeTrackingRole, self?: TimesSettingsRoleGrid): boolean {
+        if (!entry) {
             let name = container.find('#name').val();
 
             if (!name || self.document.map.has(<string>name))

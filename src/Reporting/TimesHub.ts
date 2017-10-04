@@ -10,6 +10,7 @@ import { IMenuBarConfiguration, createMenuBar, getCurrentMonthFilterTimeFrame } 
 import { createHierarchyGridOptions } from '../UIHelper/GridHelper';
 import { create } from 'VSS/Controls';
 import { hasAccess } from "../Auth/AuthHelper";
+import { openWorkItem } from "../WorkItemHelper/NavigationHelper";
 
 export class TimesHub {
     private wait: WaitControl;
@@ -98,6 +99,13 @@ export class TimesHub {
             };
 
             let gridOptions = createHierarchyGridOptions(() => values, 'calc(100% - 38px)', '100%', 'date', 'desc', false, TimeTrackingCompleteEntryFactory.prototype.createGridColumns);
+
+            gridOptions.openRowDetail = (index: number) => {
+                let data = this.grid.getRowData(index);
+                if (data.workItemIdString) {
+                    openWorkItem(parseInt(data.workItemIdString));
+                }
+            };
 
             this.grid = create<Grid, IGridOptions>(Grid, container, gridOptions);
             this.wait.endWait();

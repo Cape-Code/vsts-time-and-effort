@@ -45,7 +45,23 @@ export class TimeTrackingEstimateEntryFactory implements IEntityFactory<TimeTrac
     createHierarchyGridColumns(): IGridColumn[] {
         return [
             { name: 'Id', width: 50, text: 'Id', tooltip: 'Id', index: 'workItemId' },
-            { name: 'Type', width: 75, text: 'Type', tooltip: 'Type', index: 'type' },
+            {
+                name: 'Type', width: 110, text: 'Type', tooltip: 'Type', index: 'type', getCellContents: function (rowInfo: any, dataIndex: number, expandedState: number, level: number, column: any, indentIndex: number, columnOrder: number) {
+                    let icon = this.getColumnValue(dataIndex, 'icon', columnOrder);
+
+                    let div = $("<div class='grid-cell'/>")
+                        .css('padding-left', '19px')
+                        .width(column.width)
+                        .text(this.getColumnValue(dataIndex, column.index, columnOrder));
+
+                    if (icon) {
+                        div.css('background', `url("${icon}") left center no-repeat`)
+                            .css('background-size', '14px 14px')
+                    }
+
+                    return div;
+                }
+            },
             { name: 'Title', width: 300, text: 'Title / Role', tooltip: 'Title / Role', index: 'role', indent: true, canSortBy: false },
             { name: 'Cost', width: 100, text: 'Cost', tooltip: 'Cost', index: 'cost', canSortBy: false },
             { name: 'Hours', width: 75, text: 'Hours', tooltip: 'Hours', index: 'hours', canSortBy: false },

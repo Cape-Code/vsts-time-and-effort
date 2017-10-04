@@ -23,7 +23,7 @@ export abstract class BasicDataGrid<TEntity, TDocument extends IDocument<string,
 
     abstract getKey(value: TEntity): string;
     abstract createDialogUIControls(dialogUI: JQuery<HTMLElement>, hasEntry: boolean, self: BasicDataGrid<TEntity, TDocument, TEntityFactory>, type: BaseDataGridCreateDialogType, entry?: TEntity): IPromise<void>;
-    abstract validate(container: JQuery, type: BaseDataGridCreateDialogType, validateNew?: boolean, self?: BasicDataGrid<TEntity, TDocument, TEntityFactory>): boolean;
+    abstract validate(container: JQuery, type: BaseDataGridCreateDialogType, entry?: TEntity, self?: BasicDataGrid<TEntity, TDocument, TEntityFactory>): boolean;
     abstract createValue(container: JQuery, self: BasicDataGrid<TEntity, TDocument, TEntityFactory>, type: BaseDataGridCreateDialogType, entry?: TEntity): TEntity;
     abstract filterValue(value: TEntity, status: boolean): boolean;
 
@@ -96,14 +96,16 @@ export abstract class BasicDataGrid<TEntity, TDocument extends IDocument<string,
     }
 
     private _validateNew(container: JQuery, type: BaseDataGridCreateDialogType): (container: JQuery) => boolean {
-        return (container: JQuery) => { return this.validate(container, type, true, this); };
+        return (container: JQuery) => { return this.validate(container, type, undefined, this); };
     }
 
     private _createDialogUI(container: JQuery, self: BasicDataGrid<TEntity, TDocument, TEntityFactory>, type: BaseDataGridCreateDialogType, entry?: TEntity): IPromise<JQuery> {
         let hasEntry = entry ? true : false;
 
+        self.wait.startWait();
         let dialogUI = createModalDialogUI(container);
         return self.createDialogUIControls(dialogUI, hasEntry, self, type, entry).then(() => {
+            self.wait.endWait();
             return dialogUI;
         });
     }

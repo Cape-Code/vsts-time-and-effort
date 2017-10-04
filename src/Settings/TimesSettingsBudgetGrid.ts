@@ -48,8 +48,8 @@ export class TimesSettingsBudgetGrid extends BasicDataGrid<TimeTrackingBudget, T
         return (value.end > new Date()) || status;
     }
 
-    validate(container: JQuery, type: BaseDataGridCreateDialogType, validateNew?: boolean, self?: TimesSettingsBudgetGrid): boolean {
-        if (validateNew) {
+    validate(container: JQuery, type: BaseDataGridCreateDialogType, entry?: TimeTrackingBudget, self?: TimesSettingsBudgetGrid): boolean {
+        if (!entry) {
             let name = container.find('#name').val();
 
             if (!name || self.document.map.has(<string>name))

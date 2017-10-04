@@ -58,7 +58,7 @@ export class TimesPageTimesGrid extends BasicDataGrid<TimeTrackingEntry, TimeTra
         return true;
     }
 
-    validate(container: JQuery, type: BaseDataGridCreateDialogType, validateNew?: boolean, self?: TimesPageTimesGrid): boolean {
+    validate(container: JQuery, type: BaseDataGridCreateDialogType, entry?: TimeTrackingEntry, self?: TimesPageTimesGrid): boolean {
         let role = <string>container.find('#role_txt').val();
         let hours = parseFloat(<string>container.find('#hours').val());
         let date = container.find('#date').val();

@@ -1,7 +1,7 @@
 {
   "name": "cc-time-and-effort",
   "private": true,
-  "version": "0.1.253",
+  "version": "0.1.275",
   "description": "Plan & track time and costs on work items easily.",
   "repository": {
     "type": "git",

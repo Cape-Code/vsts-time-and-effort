@@ -25,8 +25,8 @@ export class TimesSettingsCustomerGrid extends BasicDataGrid<TimeTrackingCustome
         return value.isActive || status;
     }
 
-    validate(container: JQuery, type: BaseDataGridCreateDialogType, validateNew?: boolean, self?: TimesSettingsCustomerGrid): boolean {
-        if (validateNew) {
+    validate(container: JQuery, type: BaseDataGridCreateDialogType, entry?: TimeTrackingCustomer, self?: TimesSettingsCustomerGrid): boolean {
+        if (!entry) {
             let name = container.find('#name').val();
 
             if (!name || self.document.map.has(<string>name))

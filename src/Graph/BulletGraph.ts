@@ -11,10 +11,14 @@ export class BulletGraph {
             value = 0;
         }
 
+        if (!value2) {
+            value2 = 0;
+        }
+
         let lim80 = limit * 80 / 100;
         let lim120 = limit * 120 / 100;
 
-        this.max = Math.max(lim120, value);
+        this.max = Math.max(lim120, value, value2);
         this.width = containerWidth - marginLeft - marginRight;
 
         let svg = this._makeSVGEl('svg', { class: 'bullet', width: this.width + marginLeft + marginRight, height: height + marginTop + marginBottom });
@@ -34,7 +38,7 @@ export class BulletGraph {
 
         let measureLabel = this._makeSVGEl('text', { class: 'measure-label' });
         let measureLabelText = this._makeSVGEl('tspan', { dy: '.3em', x: 10, y: height / 2 });
-        measureLabelText.textContent = value.toString();
+        measureLabelText.textContent = `${value.toString()}${value2 > 0 ? '/' + value2.toString() : ''}`;
         measureLabel.appendChild(measureLabelText);
         g.appendChild(measureLabel);
 

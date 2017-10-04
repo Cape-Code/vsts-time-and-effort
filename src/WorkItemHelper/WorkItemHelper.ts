@@ -9,7 +9,7 @@ import { TimeTrackingEntry, TimeTrackingEntryFactory } from './../Data/TimeTrack
 import { TimeTrackingBudget } from './../Data/TimeTrackingBudget';
 import { TimeTrackingCompleteEntry } from './../Data/TimeTrackingCompleteEntry';
 import { WorkItemTrackingHttpClient3_2, getClient } from 'TFS/WorkItemTracking/RestClient';
-import { WorkItemRelationType, WorkItem, WorkItemExpand } from 'TFS/WorkItemTracking/Contracts';
+import { WorkItemRelationType, WorkItem, WorkItemExpand, WorkItemType } from 'TFS/WorkItemTracking/Contracts';
 import { TimeTrackingBudgetDataDocument, TimeTrackingBudgetDataDocumentFactory } from './../Data/TimeTrackingBudgetDataDocument';
 import * as Q from 'q';
 import { getGlobalTimeIndex, getTimeIndexById, getDocumentById, getCustomDocument, createCustomDocumentWithValue, updateCustomDocument, createCustomDocument, getCurrentProject, updateDocument } from '../Data/DataServiceHelper';
@@ -217,15 +217,31 @@ export function getGlobalWorkItemTimes(start: Date, end: Date): IPromise<TimeTra
 
                         if (wiMap.size > 0) {
                             return getWorkItems(Array.from(wiMap.keys()), ['System.WorkItemType', 'System.Title'], client).then((wis) => {
-                                wis.forEach((wi) => {
-                                    wiMap.get(wi.id).forEach((v) => {
-                                        v.workItemIdString = wi.id.toString();
-                                        v.workItemType = wi.fields['System.WorkItemType'];
-                                        v.title = wi.fields['System.Title'];
-                                    });
+                                let workItemTypes = new Set(wis.map((wi) => wi.fields['System.WorkItemType']))
+                                let witPromises: IPromise<WorkItemType>[] = [];
+                                let project = getCurrentProject();
+
+                                workItemTypes.forEach((wit) => {
+                                    witPromises.push(client.getWorkItemType(project, wit));
                                 });
 
-                                return result;
+                                return Q.all(witPromises).then((wits) => {
+                                    let iconCache = new Map<string, string>();
+                                    wits.forEach((wit) => {
+                                        iconCache.set(wit.name, wit.icon.url);
+                                    });
+
+                                    wis.forEach((wi) => {
+                                        wiMap.get(wi.id).forEach((v) => {
+                                            v.workItemIdString = wi.id.toString();
+                                            v.workItemType = wi.fields['System.WorkItemType'];
+                                            v.title = wi.fields['System.Title'];
+                                            v.icon = iconCache.get(v.workItemType);
+                                        });
+                                    });
+
+                                    return result;
+                                });
                             });
                         } else {
                             return Q(result);
@@ -487,6 +503,13 @@ export interface IWorkItemInfo {
     workItemId: number;
     type: string;
     workItemName: string;
+    icon: string;
+}
+
+export function getWorkItemInfo(workItemId: number): IPromise<IWorkItemInfo> {
+    return getClient().getWorkItem(workItemId,['System.WorkItemType', 'System.Title']).then((workItem) => {
+        return <IWorkItemInfo>{ workItemId: workItem.id, workItemName: workItem.fields['System.Title'], type: workItem.fields['System.WorkItemType'] };
+    });
 }
 
 function loadEntries<TEntity, TDocument extends IDocument<string, TEntity>, TEntityFactory extends IEntityFactory<TEntity, TDocument>, TWorkItemHierarchy extends IWorkItemHierarchy<TEntity>, TAggregateValues>(
@@ -561,47 +584,67 @@ function createParentHierarchyRec(rootId: number, workItem: WorkItem, client: Wo
     }
 }
 
-function createHierarchyRec<TEntity, TWorkItemHierarchy extends IWorkItemHierarchy<TEntity>>(items: WorkItem[], client: WorkItemTrackingHttpClient3_2, types: Map<string, WorkItemRelationType>, fnApplyValues: (element: TWorkItemHierarchy) => void, mapping?: Map<number, TWorkItemHierarchy>): IPromise<Map<number, TWorkItemHierarchy>> {
+function createHierarchyRec<TEntity, TWorkItemHierarchy extends IWorkItemHierarchy<TEntity>>(items: WorkItem[], client: WorkItemTrackingHttpClient3_2, types: Map<string, WorkItemRelationType>, fnApplyValues: (element: TWorkItemHierarchy) => void, icons?: Map<string, string>, mapping?: Map<number, TWorkItemHierarchy>): IPromise<Map<number, TWorkItemHierarchy>> {
     if (!mapping) {
         mapping = new Map<number, TWorkItemHierarchy>();
     }
 
+    if (!icons) {
+        icons = new Map<string, string>();
+    }
+
     let nextLevel: number[] = [];
 
-    items.forEach((wi) => {
-        let e = <TWorkItemHierarchy>{ item: wi, workItemId: wi.id, workItemName: wi.fields['System.Title'], type: wi.fields['System.WorkItemType'] };
+    let workItemTypes = new Set(items.map((wi) => wi.fields['System.WorkItemType']))
+    let witPromises: IPromise<WorkItemType>[] = [];
+    let project = getCurrentProject();
 
-        fnApplyValues(e);
-
-        mapping.set(wi.id, e);
-
-        if (wi.relations) {
-            wi.relations.forEach((r) => {
-                if (types.has(r.rel)) {
-                    let id = parseInt(r.url.match("[^/]+$")[0]);
-
-                    if (types.get(r.rel).name === 'Parent') {
-                        if (mapping.has(id)) {
-                            let v = mapping.get(id);
-                            mapping.get(wi.id).parent = v;
-
-                            if (!v.children) {
-                                v.children = [];
-                            }
-
-                            v.children.push(mapping.get(wi.id));
-                        }
-                    } else {
-                        nextLevel.push(id);
-                    }
-                }
-            });
-        }
+    workItemTypes.forEach((wit) => {
+        if (!icons.has(wit))
+            witPromises.push(client.getWorkItemType(project, wit));
     });
 
-    if (nextLevel.length > 0) {
-        return getWorkItemsWithRelations(nextLevel, client).then((wis) => createHierarchyRec(wis, client, types, fnApplyValues, mapping));
-    } else {
-        return Q(mapping);
-    }
+    return Q.all(witPromises).then((wits) => {
+        wits.forEach((wit) => {
+            icons.set(wit.name, wit.icon.url);
+        });
+
+        items.forEach((wi) => {
+            let e = <TWorkItemHierarchy>{ item: wi, workItemId: wi.id, workItemName: wi.fields['System.Title'], type: wi.fields['System.WorkItemType'] };
+            e.icon = icons.get(e.type);
+
+            fnApplyValues(e);
+
+            mapping.set(wi.id, e);
+
+            if (wi.relations) {
+                wi.relations.forEach((r) => {
+                    if (types.has(r.rel)) {
+                        let id = parseInt(r.url.match("[^/]+$")[0]);
+
+                        if (types.get(r.rel).name === 'Parent') {
+                            if (mapping.has(id)) {
+                                let v = mapping.get(id);
+                                mapping.get(wi.id).parent = v;
+
+                                if (!v.children) {
+                                    v.children = [];
+                                }
+
+                                v.children.push(mapping.get(wi.id));
+                            }
+                        } else {
+                            nextLevel.push(id);
+                        }
+                    }
+                });
+            }
+        });
+
+        if (nextLevel.length > 0) {
+            return getWorkItemsWithRelations(nextLevel, client).then((wis) => createHierarchyRec(wis, client, types, fnApplyValues, icons, mapping));
+        } else {
+            return Q(mapping);
+        }
+    });
 }
