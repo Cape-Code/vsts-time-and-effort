@@ -1,7 +1,8 @@
 {
     "manifestVersion": 1,
     "id": "cc-time-and-effort",
-    "version": "0.1.276",
+    "version": "0.1.285",
+    "galleryProperties": [{ "markdownItParser": "true" }],
     "publisher": "capecode",
     "name": "Time & Effort",
     "description": "Plan & track time and costs on work items easily.",
@@ -30,6 +31,18 @@
         "color": "#4F0018",
         "theme": "dark"
     },
+    "repository": {
+        "type": "git",
+        "uri": "https://github.com/Cape-Code/vsts-time-and-effort"
+    },
+    "links": {
+        "contact": {
+            "uri": "http://www.cape-code.com/"
+        }
+    },
+    "scopes": [
+        "vso.work_write"
+    ],
     "targets": [
         {
             "id": "Microsoft.VisualStudio.Services.Cloud"
@@ -160,9 +173,6 @@
                 "uri": "pages/budget-context-assign.html"
             }
         }
-    ],
-    "scopes": [
-        "vso.work_write"
     ],
     "files": [
         {

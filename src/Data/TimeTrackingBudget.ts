@@ -48,7 +48,7 @@ export class TimeTrackingBudgetFactory implements IEntityFactory<TimeTrackingBud
             { name: 'Start', width: 100, text: 'Start', tooltip: 'Start', format: getDateTimeFormat().ShortDatePattern, index: 'start' },
             { name: 'End', width: 100, text: 'End', tooltip: 'End', format: getDateTimeFormat().ShortDatePattern, index: 'end' },
             { name: 'Hours', width: 100, text: 'Hours', tooltip: 'Hours', index: 'hours' },
-            { name: 'Cost', width: 100, text: `Cost ${getNumberFormat().CurrencySymbol}/h`, tooltip: 'Cost per hour', index: 'cost' },
+            { name: 'Cost', width: 100, text: `Cost (in ${getNumberFormat().CurrencySymbol})`, tooltip: 'Cost', index: 'cost' },
             { name: 'Description', width: 400, text: 'Description', tooltip: 'Description', fixed: true, index: 'description', canSortBy: false }
         ];
     }
