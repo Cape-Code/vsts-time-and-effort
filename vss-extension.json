@@ -1,7 +1,7 @@
 {
     "manifestVersion": 1,
     "id": "cc-time-and-effort",
-    "version": "0.1.285",
+    "version": "0.1.286",
     "galleryProperties": [{ "markdownItParser": "true" }],
     "publisher": "capecode",
     "name": "Time & Effort",
@@ -36,7 +36,7 @@
         "uri": "https://github.com/Cape-Code/vsts-time-and-effort"
     },
     "links": {
-        "contact": {
+        "support": {
             "uri": "http://www.cape-code.com/"
         }
     },
