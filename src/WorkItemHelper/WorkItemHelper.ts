@@ -12,7 +12,7 @@ import { WorkItemTrackingHttpClient3_2, getClient } from 'TFS/WorkItemTracking/R
 import { WorkItemRelationType, WorkItem, WorkItemExpand, WorkItemType } from 'TFS/WorkItemTracking/Contracts';
 import { TimeTrackingBudgetDataDocument, TimeTrackingBudgetDataDocumentFactory } from './../Data/TimeTrackingBudgetDataDocument';
 import * as Q from 'q';
-import { getGlobalTimeIndex, getTimeIndexById, getDocumentById, getCustomDocument, createCustomDocumentWithValue, updateCustomDocument, createCustomDocument, getCurrentProject, updateDocument } from '../Data/DataServiceHelper';
+import { getGlobalTimeIndex, getTimeIndexById, getDocumentById, getCustomDocument, createCustomDocumentWithValue, updateCustomDocument, createCustomDocument, getCurrentProject, updateDocument, getAllDocuments, deserializeDocument } from '../Data/DataServiceHelper';
 import { updateQuery } from "./QueryHelper";
 import { format } from "../Data/Date";
 
@@ -272,13 +272,58 @@ export function updateBudget(workItemId: number, fnUpdate: (data: TimeTrackingBu
     });
 }
 
+function recalculateBudgetData(data: TimeTrackingBudgetDataDocument): IPromise<TimeTrackingBudgetDataDocument> {
+    return getAllDocuments().then((docs) => {
+        data.assignedCost = 0;
+        data.assignedHours = 0;
+        data.usedCost = 0;
+        data.usedHours = 0;
+        data.workItems.clear();
+
+        if (!data.version)
+            data.version = 0;
+
+        let currentProject = getCurrentProject();
+        let times = new Map<string, TimeTrackingEntriesDocument>();
+        let estimates = new Map<string, TimeTrackingEstimateEntriesDocument>();
+        let myRegEx = /tae\.(\d+)\.ba/;
+
+        docs.forEach((doc) => {
+            if (doc.id.startsWith(`tae.${currentProject}.t.`)) {
+                times.set(doc.id, deserializeDocument(doc, TimeTrackingEntryFactory.prototype.itemConstructor));
+            } else if (doc.id.startsWith(`tae.${currentProject}.e.`)) {
+                estimates.set(doc.id, deserializeDocument(doc, TimeTrackingEstimateEntryFactory.prototype.itemConstructor));
+            } else if (doc.id.startsWith('tae.') && doc.id.endsWith('.ba') && doc.budgetDataId && doc.budgetDataId === data.id) {
+                data.workItems.add(parseInt(myRegEx.exec(doc.id)[1]));
+            }
+        });
+
+        data.workItems.forEach((wi) => {
+            let estimateDocId = TimeTrackingEstimateEntryFactory.prototype.createDocumentId(wi);
+            let timesDocId = TimeTrackingEntryFactory.prototype.createDocumentId(wi);
+
+            addWorkItemDataToBudget(data, times.has(timesDocId) ? times.get(timesDocId) : undefined, estimates.has(estimateDocId) ? estimates.get(estimateDocId) : undefined);
+        });
+
+        data.version += 1;
+
+        return updateCustomDocument(data, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer, TimeTrackingBudgetDataDocumentFactory.prototype.serializer);
+    });
+}
+
 export function loadBudgetAssignment(workItemId: number): IPromise<TimeTrackingBudgetDataDocument> {
     let client = getClient();
     let id = TimeTrackingBudgetAssignmentDocumentFactory.prototype.createDocumentId(workItemId.toString());
 
     return getCustomDocument(id, TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer).then((doc) => {
         if (doc.budgetDataId) {
-            return getCustomDocument(doc.budgetDataId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => data);
+            return getCustomDocument(doc.budgetDataId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
+                if (data.version === 1)
+                    return Q(data);
+                else {
+                    return recalculateBudgetData(data);
+                }
+            });
         } else {
             return Q(undefined);
         }
@@ -308,10 +353,8 @@ export function loadBudgetAssignment(workItemId: number): IPromise<TimeTrackingB
     });
 }
 
-function assignBudget(workItemId: number, budget: string, times: TimeTrackingEntriesDocument, estimates: TimeTrackingEstimateEntriesDocument, assignmentDoc: TimeTrackingBudgetAssignmentDocument): IPromise<TimeTrackingBudgetDataDocument> {
-    return getCustomDocument(budget, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
-        data.workItems.add(workItemId);
-
+function addWorkItemDataToBudget(data: TimeTrackingBudgetDataDocument, times?: TimeTrackingEntriesDocument, estimates?: TimeTrackingEstimateEntriesDocument) {
+    if (times)
         times.map.forEach((value, key) => {
             if (data.roles.has(value.role.name))
                 value.role = data.roles.get(value.role.name);
@@ -320,6 +363,7 @@ function assignBudget(workItemId: number, budget: string, times: TimeTrackingEnt
             data.usedCost += value.role.cost * value.hours;
         });
 
+    if (estimates)
         estimates.map.forEach((value, key) => {
             if (data.roles.has(value.role.name))
                 value.role = data.roles.get(value.role.name);
@@ -327,6 +371,13 @@ function assignBudget(workItemId: number, budget: string, times: TimeTrackingEnt
             data.assignedHours += value.hours;
             data.assignedCost += value.role.cost * value.hours;
         });
+}
+
+function assignBudget(workItemId: number, budget: string, times: TimeTrackingEntriesDocument, estimates: TimeTrackingEstimateEntriesDocument, assignmentDoc: TimeTrackingBudgetAssignmentDocument): IPromise<TimeTrackingBudgetDataDocument> {
+    return getCustomDocument(budget, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
+        data.workItems.add(workItemId);
+
+        addWorkItemDataToBudget(data, times, estimates);
 
         updateQuery(getCurrentProject(), data.queryId, Array.from(data.workItems));
 
@@ -509,7 +560,7 @@ export interface IWorkItemInfo {
 }
 
 export function getWorkItemInfo(workItemId: number): IPromise<IWorkItemInfo> {
-    return getClient().getWorkItem(workItemId,['System.WorkItemType', 'System.Title']).then((workItem) => {
+    return getClient().getWorkItem(workItemId, ['System.WorkItemType', 'System.Title']).then((workItem) => {
         return <IWorkItemInfo>{ workItemId: workItem.id, workItemName: workItem.fields['System.Title'], type: workItem.fields['System.WorkItemType'] };
     });
 }

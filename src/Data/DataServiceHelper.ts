@@ -152,6 +152,10 @@ export function getDocument<T extends IDocument<U, V>, U, V>(id: string, options
     });
 }
 
+export function deserializeDocument<T extends IDocument<U, V>, U, V>(doc: any, constructorFn: (x: any) => V) {
+    return _deserializeData(doc, constructorFn);
+}
+
 function createDocument<T extends IDocument<U, V>, U, V>(dataService: ExtensionDataService, collection: string, id: string, options?: IGetDocumentParameter<V>): IPromise<T> {
     return dataService.createDocument(collection, _serializeData(<T>{ id: id, map: new Map<U, V>(), serialized: [] }, options.serializeFn)).then((doc) => {
         return _deserializeData(doc, options.constructorFn);
@@ -180,6 +184,13 @@ export function deleteDocument(id: string): IPromise<void> {
     let collection = _getCurrentCollection();
     return _getService().then((dataService) => {
         return dataService.deleteDocument(collection, id);
+    });
+}
+
+export function getAllDocuments(): IPromise<any[]> {
+    let collection = _getCurrentCollection();
+    return _getService().then((dataService) => {
+        return dataService.getDocuments(collection).then((docs) => docs);
     });
 }
 

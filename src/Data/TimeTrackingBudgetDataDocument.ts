@@ -3,7 +3,7 @@ import { TimeTrackingBudget, TimeTrackingBudgetFactory } from './TimeTrackingBud
 import { ICustomDocument, ICustomDocumentFactory } from './Contract';
 
 export class TimeTrackingBudgetDataDocument implements ICustomDocument {
-    constructor(public id: string, public budget: TimeTrackingBudget, public queryId: string, public queryLink: string, public roles: Map<string, TimeTrackingRole> = new Map<string, TimeTrackingRole>(), public assignedHours = 0, public assignedCost = 0, public usedHours = 0, public usedCost = 0, public workItems = new Set<number>()) {
+    constructor(public id: string, public budget: TimeTrackingBudget, public queryId: string, public queryLink: string, public roles: Map<string, TimeTrackingRole> = new Map<string, TimeTrackingRole>(), public assignedHours = 0, public assignedCost = 0, public usedHours = 0, public usedCost = 0, public workItems = new Set<number>(), public version = 0) {
     }
 }
 
