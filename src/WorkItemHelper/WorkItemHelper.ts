@@ -307,6 +307,8 @@ function recalculateBudgetData(data: TimeTrackingBudgetDataDocument): IPromise<T
 
         data.version += 1;
 
+        updateQuery(currentProject, data.queryId, Array.from(data.workItems));
+
         return updateCustomDocument(data, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer, TimeTrackingBudgetDataDocumentFactory.prototype.serializer);
     });
 }
