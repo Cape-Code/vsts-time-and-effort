@@ -293,7 +293,7 @@ function recalculateBudgetData(data: TimeTrackingBudgetDataDocument): IPromise<T
                 times.set(doc.id, deserializeDocument(doc, TimeTrackingEntryFactory.prototype.itemConstructor));
             } else if (doc.id.startsWith(`tae.${currentProject}.e.`)) {
                 estimates.set(doc.id, deserializeDocument(doc, TimeTrackingEstimateEntryFactory.prototype.itemConstructor));
-            } else if (doc.id.startsWith('tae.') && doc.id.endsWith('.ba') && doc.budgetDataId && doc.budgetDataId === data.id) {
+            } else if (doc.id.startsWith('tae.') && doc.id.endsWith('.ba') && doc.budget && doc.budget.budgetDataDocumentId && doc.budget.budgetDataDocumentId === data.id) {
                 data.workItems.add(parseInt(myRegEx.exec(doc.id)[1]));
             }
         });
@@ -305,7 +305,7 @@ function recalculateBudgetData(data: TimeTrackingBudgetDataDocument): IPromise<T
             addWorkItemDataToBudget(data, times.has(timesDocId) ? times.get(timesDocId) : undefined, estimates.has(estimateDocId) ? estimates.get(estimateDocId) : undefined);
         });
 
-        data.version += 1;
+        data.version = 2;
 
         updateQuery(currentProject, data.queryId, Array.from(data.workItems));
 
@@ -320,7 +320,7 @@ export function loadBudgetAssignment(workItemId: number): IPromise<TimeTrackingB
     return getCustomDocument(id, TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer).then((doc) => {
         if (doc.budgetDataId) {
             return getCustomDocument(doc.budgetDataId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
-                if (data.version === 1)
+                if (data.version === 2)
                     return Q(data);
                 else {
                     return recalculateBudgetData(data);
