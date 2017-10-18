@@ -38,7 +38,7 @@ export class BulletGraph {
 
         let measureLabel = this._makeSVGEl('text', { class: 'measure-label' });
         let measureLabelText = this._makeSVGEl('tspan', { dy: '.3em', x: 10, y: height / 2 });
-        measureLabelText.textContent = `${value.toString()}${value2 > 0 ? '/' + value2.toString() : ''}`;
+        measureLabelText.textContent = `${value.toString()}${value2 > 0 ? ' \u2015 ' + value2.toString() : ''}`;
         measureLabel.appendChild(measureLabelText);
         g.appendChild(measureLabel);
 
