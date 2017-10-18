@@ -305,7 +305,7 @@ function recalculateBudgetData(data: TimeTrackingBudgetDataDocument): IPromise<T
             addWorkItemDataToBudget(data, times.has(timesDocId) ? times.get(timesDocId) : undefined, estimates.has(estimateDocId) ? estimates.get(estimateDocId) : undefined);
         });
 
-        data.version = 2;
+        data.version = 3;
 
         updateQuery(currentProject, data.queryId, Array.from(data.workItems));
 
@@ -320,7 +320,7 @@ export function loadBudgetAssignment(workItemId: number): IPromise<TimeTrackingB
     return getCustomDocument(id, TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer).then((doc) => {
         if (doc.budgetDataId) {
             return getCustomDocument(doc.budgetDataId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
-                if (data.version === 2)
+                if (data.version === 3)
                     return Q(data);
                 else {
                     return recalculateBudgetData(data);
