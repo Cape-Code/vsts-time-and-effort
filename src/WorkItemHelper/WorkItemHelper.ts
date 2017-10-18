@@ -293,7 +293,7 @@ function recalculateBudgetData(data: TimeTrackingBudgetDataDocument): IPromise<T
                 times.set(doc.id, deserializeDocument(doc, TimeTrackingEntryFactory.prototype.itemConstructor));
             } else if (doc.id.startsWith(`tae.${currentProject}.e.`)) {
                 estimates.set(doc.id, deserializeDocument(doc, TimeTrackingEstimateEntryFactory.prototype.itemConstructor));
-            } else if (doc.id.startsWith('tae.') && doc.id.endsWith('.ba') && doc.budget && doc.budget.budgetDataDocumentId && doc.budget.budgetDataDocumentId === data.id) {
+            } else if (doc.id.startsWith('tae.') && doc.id.endsWith('.ba') && (doc.budgetDataId && doc.budgetDataId === data.id || doc.budget && doc.budget.budgetDataDocumentId && doc.budget.budgetDataDocumentId === data.id)) {
                 data.workItems.add(parseInt(myRegEx.exec(doc.id)[1]));
             }
         });
