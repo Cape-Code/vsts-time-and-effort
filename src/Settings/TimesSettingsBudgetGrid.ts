@@ -13,6 +13,7 @@ import { newGuid } from '../Data/Guid';
 import { parseDate } from '../Data/Date';
 import { createFolderIfNotExists, createQuery, deleteQuery } from '../WorkItemHelper/QueryHelper';
 import * as Q from "q";
+import { recalculateBudgetData } from "../WorkItemHelper/WorkItemHelper";
 
 export class TimesSettingsBudgetGrid extends BasicDataGrid<TimeTrackingBudget, TimeTrackingBudgetsDocument, TimeTrackingBudgetFactory> {
     private customers: TimeTrackingCustomersDocument;
@@ -23,7 +24,8 @@ export class TimesSettingsBudgetGrid extends BasicDataGrid<TimeTrackingBudget, T
             selector: '#timesBudgetsContainer',
             entityName: 'Budget',
             sortIndex: 'name',
-            hasHiddenElements: true
+            hasHiddenElements: true,
+            enableRepair: true
         };
 
         createFolderIfNotExists(getCurrentProject(), 'Tracked Budgets').then((folder) => {
@@ -111,6 +113,12 @@ export class TimesSettingsBudgetGrid extends BasicDataGrid<TimeTrackingBudget, T
             return TimeTrackingRoleFactory.getRoles().then((roles) => {
                 return createCustomDocumentWithValue(new TimeTrackingBudgetDataDocument(entry.budgetDataDocumentId, entry, query.id, query._links.html.href), TimeTrackingBudgetDataDocumentFactory.prototype.deserializer, TimeTrackingBudgetDataDocumentFactory.prototype.serializer);
             });
+        });
+    }
+
+    repairValue(entry: TimeTrackingBudget, self: TimesSettingsBudgetGrid): IPromise<void> {
+        return getCustomDocument(entry.budgetDataDocumentId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
+            return recalculateBudgetData(data).then((fixed) => undefined);
         });
     }
 

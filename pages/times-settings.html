@@ -12,12 +12,18 @@
     <script type="text/javascript">
         VSS.init({
             explicitNotifyLoaded: true,
-            usePlatformScripts: true
+            usePlatformScripts: true,
+            moduleLoaderConfig: {
+                baseUrl: '../scripts',
+                paths: {
+                    'Settings/TimesSettingsHub': 'app'
+                }
+            }
         });
-        
-        VSS.ready(function() {
-            VSS.require(['scripts/Settings/TimesSettingsHub'], function (tsh) {
-                var hub = new tsh.TimesSettingsHub();
+
+        VSS.ready(function () {
+            VSS.require(['Settings/TimesSettingsHub'], function (app) {
+                var hub = new app.TimesSettingsHub();
                 hub.init();
                 VSS.notifyLoadSucceeded();
             });

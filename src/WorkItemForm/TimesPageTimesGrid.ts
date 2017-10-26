@@ -107,6 +107,10 @@ export class TimesPageTimesGrid extends BasicDataGrid<TimeTrackingEntry, TimeTra
         });
     }
 
+    repairValue(entry: TimeTrackingEntry, self: TimesPageTimesGrid): IPromise<void> {
+        return Q(undefined);
+    }
+
     determineEntityDialogType(entity: TimeTrackingEntry): BaseDataGridCreateDialogType {
         return 'create';
     }

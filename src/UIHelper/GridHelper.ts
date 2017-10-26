@@ -1,6 +1,6 @@
 import { IGridOptions, IGridHierarchyItem, GridHierarchySource, IGridSortOrder, IGridGutterOptions, IGridContextMenu, IGridColumn } from 'VSS/Controls/Grids';
 
-export function createGridOptions<T, U>(dataFn: () => T[], height: string, width: string, sortIndex: string, sortOrder: string, lastCellFills: boolean, columnFn: () => IGridColumn[], editFn?: (entry: T, self: U) => void, deleteFn?: (entry: T, self: U) => void, self?: U): IGridOptions {
+export function createGridOptions<T, U>(dataFn: () => T[], height: string, width: string, sortIndex: string, sortOrder: string, lastCellFills: boolean, columnFn: () => IGridColumn[], editFn?: (entry: T, self: U) => void, deleteFn?: (entry: T, self: U) => void, self?: U, repairFn?: (entry: T, self: U) => void): IGridOptions {
     let gridOptions: IGridOptions = {
         source: dataFn(),
         height: height,
@@ -9,7 +9,7 @@ export function createGridOptions<T, U>(dataFn: () => T[], height: string, width
         columns: columnFn(),
         sortOrder: _createGridSortOptions(sortIndex, sortOrder),
         gutter: _createGridGutterOptions(editFn ? true : false),
-        contextMenu: editFn ? _createGridContextMenu<T, U>(editFn, deleteFn, self) : undefined
+        contextMenu: editFn ? _createGridContextMenu<T, U>(editFn, deleteFn, self, repairFn) : undefined
     };
 
     return gridOptions;
@@ -54,13 +54,18 @@ function _createGridGutterOptions(enableMenu: boolean): IGridGutterOptions {
     return gutterOptions;
 }
 
-function _createGridContextMenu<T, U>(editFn: (entry: T, self: U) => void, deleteFn: (entry: T, self: U) => void, self: U): IGridContextMenu {
+function _createGridContextMenu<T, U>(editFn: (entry: T, self: U) => void, deleteFn: (entry: T, self: U) => void, self: U, repairFn?: (entry: T, self: U) => void): IGridContextMenu {
+    let items = [
+        { rank: 5, id: 'Edit', text: 'Edit', title: 'Edit', icon: 'bowtie-icon bowtie-edit' },
+        { rank: 10, id: 'Delete', text: 'Delete', title: 'Delete', icon: 'bowtie-icon bowtie-edit-delete' }
+    ];
+
+    if (repairFn)
+        items.push({ rank: 15, id: 'Repair', text: 'Repair Cached', title: 'Repair Cached', icon: 'bowtie-icon bowtie-synchronize' });
+
     let contextMenu: IGridContextMenu = {
         useBowtieStyle: true,
-        items: [
-            { rank: 5, id: 'Edit', text: 'Edit', title: 'Edit', icon: 'bowtie-icon bowtie-edit' },
-            { rank: 10, id: 'Delete', text: 'Delete', title: 'Delete', icon: 'bowtie-icon bowtie-edit-delete' }
-        ],
+        items: items,
         executeAction: (e) => {
             switch (e.get_commandName()) {
                 case 'Edit':
@@ -68,6 +73,9 @@ function _createGridContextMenu<T, U>(editFn: (entry: T, self: U) => void, delet
                     break;
                 case 'Delete':
                     deleteFn(e.get_commandSource().getOwner().getContextInfo().item, self);
+                    break;
+                case 'Repair':
+                    repairFn(e.get_commandSource().getOwner().getContextInfo().item, self);
                     break;
             }
         }

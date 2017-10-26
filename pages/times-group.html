@@ -13,11 +13,17 @@
     <script type="text/javascript">
         VSS.init({
             explicitNotifyLoaded: true,
-            usePlatformScripts: true
+            usePlatformScripts: true,
+            moduleLoaderConfig: {
+                baseUrl: '../scripts',
+                paths: {
+                    'WorkItemForm/TimesGroup': 'app'
+                }
+            }
         });
 
         VSS.ready(function () {
-            VSS.require(['scripts/WorkItemForm/TimesGroup'], function (tg) {
+            VSS.require(['WorkItemForm/TimesGroup'], function (tg) {
                 var group = new tg.TimesGroup();
                 group.init();
                 VSS.notifyLoadSucceeded();

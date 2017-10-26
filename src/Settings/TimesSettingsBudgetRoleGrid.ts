@@ -97,6 +97,10 @@ export class TimesSettingsBudgetRoleGrid extends BasicDataGrid<TimeTrackingRole,
         return self._updateAllImpactedBookings(self);
     }
 
+    repairValue(entry: TimeTrackingRole, self: TimesSettingsBudgetRoleGrid): IPromise<void> {
+        return Q(undefined);
+    }
+
     determineEntityDialogType(entity: TimeTrackingRole): BaseDataGridCreateDialogType {
         return 'create';
     }

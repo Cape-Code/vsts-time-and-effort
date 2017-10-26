@@ -14,11 +14,17 @@
     <script type="text/javascript">
         VSS.init({
             explicitNotifyLoaded: true,
-            usePlatformScripts: true
+            usePlatformScripts: true,
+            moduleLoaderConfig: {
+                baseUrl: '../scripts',
+                paths: {
+                    'Reporting/BudgetsHub': 'app'
+                }
+            }
         });
         
         VSS.ready(function() {
-            VSS.require(['scripts/Reporting/BudgetsHub'], function (th) {
+            VSS.require(['Reporting/BudgetsHub'], function (th) {
                 var hub = new th.BudgetsHub();
                 hub.init();
                 VSS.notifyLoadSucceeded();

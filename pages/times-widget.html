@@ -7,10 +7,16 @@
     <script type="text/javascript">
         VSS.init({
             explicitNotifyLoaded: true,
-            usePlatformStyles: true
+            usePlatformScripts: true,
+            moduleLoaderConfig: {
+                baseUrl: '../scripts',
+                paths: {
+                    'Reporting/TimesWidget': 'app'
+                }
+            }
         });
 
-        VSS.require(['TFS/Dashboards/WidgetHelpers', 'scripts/Reporting/TimesWidget'], function (WidgetHelpers, tw) {
+        VSS.require(['TFS/Dashboards/WidgetHelpers', 'Reporting/TimesWidget'], function (WidgetHelpers, tw) {
             WidgetHelpers.IncludeWidgetStyles();
             var widget = new tw.TimesWidget();
             widget.init(WidgetHelpers);

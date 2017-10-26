@@ -11,11 +11,17 @@
     <script type="text/javascript">
         VSS.init({
             explicitNotifyLoaded: true,
-            usePlatformScripts: true
+            usePlatformScripts: true,
+            moduleLoaderConfig: {
+                baseUrl: '../scripts',
+                paths: {
+                    'ContextMenu/AssignBudget': 'app'
+                }
+            }
         });
 
         VSS.ready(function () {
-            VSS.require(['scripts/ContextMenu/AssignBudget'], function () {
+            VSS.require(['ContextMenu/AssignBudget'], function () {
                 VSS.notifyLoadSucceeded();
             });
         });

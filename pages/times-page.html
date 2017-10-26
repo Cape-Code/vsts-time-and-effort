@@ -14,11 +14,17 @@
     <script type="text/javascript">
         VSS.init({
             explicitNotifyLoaded: true,
-            usePlatformScripts: true
+            usePlatformScripts: true,
+            moduleLoaderConfig: {
+                baseUrl: '../scripts',
+                paths: {
+                    'WorkItemForm/TimesPage': 'app'
+                }
+            }
         });
         
         VSS.ready(function() {
-            VSS.require(['scripts/WorkItemForm/TimesPage'], function (tp) {
+            VSS.require(['WorkItemForm/TimesPage'], function (tp) {
                 var page = new tp.TimesPage();
                 page.init();
                 VSS.notifyLoadSucceeded();

@@ -26,6 +26,7 @@ export abstract class BasicDataGrid<TEntity, TDocument extends IDocument<string,
     abstract validate(container: JQuery, type: BaseDataGridCreateDialogType, entry?: TEntity, self?: BasicDataGrid<TEntity, TDocument, TEntityFactory>): boolean;
     abstract createValue(container: JQuery, self: BasicDataGrid<TEntity, TDocument, TEntityFactory>, type: BaseDataGridCreateDialogType, entry?: TEntity): TEntity;
     abstract filterValue(value: TEntity, status: boolean): boolean;
+    abstract repairValue(value: TEntity, self: BasicDataGrid<TEntity, TDocument, TEntityFactory>): IPromise<void>;
 
     abstract afterCreateEntry(entry: TEntity, type: BaseDataGridCreateDialogType, self: BasicDataGrid<TEntity, TDocument, TEntityFactory>): IPromise<void>;
     abstract determineEntityDialogType(entity: TEntity): BaseDataGridCreateDialogType;
@@ -119,7 +120,7 @@ export abstract class BasicDataGrid<TEntity, TDocument extends IDocument<string,
                 return Array.from(doc.map.values()).filter((value) => { return this.filterValue(value, this.status); });
             };
 
-            let gridOptions = createGridOptions<TEntity, BasicDataGrid<TEntity, TDocument, TEntityFactory>>(dataFn, this.options.height ? this.options.height : 'calc(100% - 38px)', '100%', this.options.sortIndex, this.options.sortOrder ? this.options.sortOrder : 'asc', this.options.lastCellFills, this.factory.createGridColumns, this._editEntry, this._deleteEntry, this);
+            let gridOptions = createGridOptions<TEntity, BasicDataGrid<TEntity, TDocument, TEntityFactory>>(dataFn, this.options.height ? this.options.height : 'calc(100% - 38px)', '100%', this.options.sortIndex, this.options.sortOrder ? this.options.sortOrder : 'asc', this.options.lastCellFills, this.factory.createGridColumns, this._editEntry, this._deleteEntry, this, this.options.enableRepair ? this._repairEntry : undefined);
 
             gridOptions.openRowDetail = (index: number) => {
                 this._editEntry(this.grid.getRowData(index), this);
@@ -142,6 +143,14 @@ export abstract class BasicDataGrid<TEntity, TDocument extends IDocument<string,
         };
 
         showModalDialog(self.container, `Edit ${self.options.entityName}`, 'Apply', okFn, self._createDialogUI, self.validate, self.createValue, self.determineEntityDialogType(entry), self, entry);
+    }
+
+    private _repairEntry(entry: TEntity, self: BasicDataGrid<TEntity, TDocument, TEntityFactory>): void {
+        self.wait.startWait();
+
+        self.repairValue(entry, self).then(() => {
+            self._updateDocument(self);
+        });
     }
 
     private _deleteEntry(entry: TEntity, self: BasicDataGrid<TEntity, TDocument, TEntityFactory>): void {
@@ -178,6 +187,7 @@ export interface IBaseDataGridOptions {
     hasHiddenElements?: boolean;
     enableExport?: boolean;
     enableAssign?: boolean;
+    enableRepair?: boolean;
     workItemId?: number;
     height?: string;
 }

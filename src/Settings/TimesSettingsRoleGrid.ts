@@ -56,6 +56,10 @@ export class TimesSettingsRoleGrid extends BasicDataGrid<TimeTrackingRole, TimeT
         return Q(undefined);
     }
 
+    repairValue(entry: TimeTrackingRole, self: TimesSettingsRoleGrid): IPromise<void> {
+        return Q(undefined);
+    }
+
     determineEntityDialogType(entity: TimeTrackingRole): BaseDataGridCreateDialogType {
         return 'create';
     }

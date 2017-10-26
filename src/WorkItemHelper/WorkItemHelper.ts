@@ -272,7 +272,7 @@ export function updateBudget(workItemId: number, fnUpdate: (data: TimeTrackingBu
     });
 }
 
-function recalculateBudgetData(data: TimeTrackingBudgetDataDocument): IPromise<TimeTrackingBudgetDataDocument> {
+export function recalculateBudgetData(data: TimeTrackingBudgetDataDocument): IPromise<TimeTrackingBudgetDataDocument> {
     return getAllDocuments().then((docs) => {
         data.assignedCost = 0;
         data.assignedHours = 0;

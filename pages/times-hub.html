@@ -14,11 +14,17 @@
     <script type="text/javascript">
         VSS.init({
             explicitNotifyLoaded: true,
-            usePlatformScripts: true
+            usePlatformScripts: true,
+            moduleLoaderConfig: {
+                baseUrl: '../scripts',
+                paths: {
+                    'Reporting/TimesHub': 'app'
+                }
+            }
         });
         
         VSS.ready(function() {
-            VSS.require(['scripts/Reporting/TimesHub'], function (th) {
+            VSS.require(['Reporting/TimesHub'], function (th) {
                 var hub = new th.TimesHub();
                 hub.init();
                 VSS.notifyLoadSucceeded();

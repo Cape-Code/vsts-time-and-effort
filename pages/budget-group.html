@@ -13,11 +13,17 @@
     <script type="text/javascript">
         VSS.init({
             explicitNotifyLoaded: true,
-            usePlatformScripts: true
+            usePlatformScripts: true,
+            moduleLoaderConfig: {
+                baseUrl: '../scripts',
+                paths: {
+                    'WorkItemForm/BudgetGroup': 'app'
+                }
+            }
         });
 
         VSS.ready(function () {
-            VSS.require(['scripts/WorkItemForm/BudgetGroup'], function (tg) {
+            VSS.require(['WorkItemForm/BudgetGroup'], function (tg) {
                 var group = new tg.BudgetGroup();
                 group.init();
                 VSS.notifyLoadSucceeded();

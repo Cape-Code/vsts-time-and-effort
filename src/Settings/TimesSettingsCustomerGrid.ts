@@ -57,6 +57,10 @@ export class TimesSettingsCustomerGrid extends BasicDataGrid<TimeTrackingCustome
         return Q(undefined);
     }
 
+    repairValue(entry: TimeTrackingCustomer, self: TimesSettingsCustomerGrid): IPromise<void> {
+        return Q(undefined);
+    }
+
     determineEntityDialogType(entity: TimeTrackingCustomer): BaseDataGridCreateDialogType {
         return 'create';
     }

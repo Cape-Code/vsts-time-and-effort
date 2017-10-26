@@ -206,6 +206,10 @@ export class EstimatePageEstimatesGrid extends BasicDataGrid<TimeTrackingEstimat
         });
     }
 
+    repairValue(entry: TimeTrackingEstimateEntry, self: EstimatePageEstimatesGrid): IPromise<void> {
+        return Q(undefined);
+    }
+
     determineEntityDialogType(entity: TimeTrackingEstimateEntry): BaseDataGridCreateDialogType {
         return entity.assignedFromParentWorkItemId ? 'assign' : 'create';
     }
