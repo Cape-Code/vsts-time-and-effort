@@ -15,15 +15,19 @@ export class BudgetsHub {
     private wait: WaitControl;
     private notification: MessageAreaControl;
 
-    public init(): void {
+    public init(services: any): void {
         hasAccess().then((res) => {
             let c = $('#hubContainer');
 
             if (res) {
                 this.notification = createNotification(c);
                 this.wait = createWaitControl(c);
+                let outerContainer = $('<div class="outerContainer" />');
+                outerContainer.appendTo(c);
+                let stats = $('<div class="stats" />');
+                stats.appendTo(outerContainer);
                 let container = $('<div class="container" />');
-                container.appendTo(c);
+                container.appendTo(outerContainer);
                 this.wait.startWait();
 
                 TimeTrackingBudgetFactory.getBudgets().then((budgets) => {
@@ -35,6 +39,8 @@ export class BudgetsHub {
                     });
 
                     Q.all<TimeTrackingBudgetDataDocument>(promises).then((data) => {
+                        let agg = new Map<string, BudgetReportingData>();
+
                         data.sort((a, b) => {
                             if (a.budget.end > b.budget.end)
                                 return 1;
@@ -42,6 +48,10 @@ export class BudgetsHub {
                                 return -1;
                             return 0;
                         }).forEach((value) => {
+                            if (!agg.has(value.budget.customer.name))
+                                agg.set(value.budget.customer.name, new BudgetReportingData());
+                            agg.get(value.budget.customer.name).addBudget(value);
+
                             let element = $('<div class="budget" />');
                             container.append(element);
                             element.append($(`<div class="title"><a href="${value.queryLink}" target="_parent">${value.budget.name} (${value.budget.customer.name})</a></div>`));
@@ -50,12 +60,59 @@ export class BudgetsHub {
                             new BulletGraph(element, 'Cost', `in ${getNumberFormat().CurrencySymbol}`, value.budget.cost, value.usedCost, value.assignedCost, element[0].getBoundingClientRect().width, false);
                         });
 
-                        this.wait.endWait();
+                        let customers = Array.from(agg.keys());
+
+                        if (customers.length > 0) {
+                            services.ChartsService.getService().then((chartService) => {
+                                this.makePieChart(customers, (c) => agg.get(c).budgetHours, stats, chartService);
+                                this.makePieChart(customers, (c) => agg.get(c).usedHours, stats, chartService);
+                                this.makePieChart(customers, (c) => agg.get(c).budgetCost, stats, chartService);
+                                this.makePieChart(customers, (c) => agg.get(c).usedCost, stats, chartService);
+                                this.wait.endWait();
+                            });
+                        } else
+                            this.wait.endWait();
                     });
                 });
             } else {
                 createNotification(c).setError($("<span />").html('You are not authorized to view this page!'));
             }
         });
+    }
+
+    protected makePieChart(labels: string[], dataFn: (label: string) => number, container: JQuery, chartService: any): any {
+        let options = {
+            hostOptions: {
+                height: 240,
+                width: 240
+            },
+            chartType: 'pie',
+            series: [{
+                data: labels.map((l) => dataFn(l)),
+            }],
+            xAxis: {
+                labelValues: labels
+            },
+            specializedOptions: {
+                showLabels: true,
+                size: 200
+            }
+        };
+
+        chartService.createChart(container, options);
+    }
+}
+
+export class BudgetReportingData {
+    constructor(public budgetHours = 0, public assignedHours = 0, public usedHours = 0, public budgetCost = 0, public assignedCost = 0, public usedCost = 0) {
+    }
+
+    addBudget(budgetData: TimeTrackingBudgetDataDocument) {
+        this.budgetHours += budgetData.budget.hours;
+        this.assignedHours += budgetData.assignedHours;
+        this.usedHours += budgetData.usedHours;
+        this.budgetCost += budgetData.budget.cost;
+        this.assignedCost += budgetData.assignedCost;
+        this.usedCost += budgetData.usedCost;
     }
 }

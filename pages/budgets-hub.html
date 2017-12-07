@@ -24,9 +24,9 @@
         });
         
         VSS.ready(function() {
-            VSS.require(['Reporting/BudgetsHub'], function (th) {
+            VSS.require(['Reporting/BudgetsHub', 'Charts/Services'], function (th, services) {
                 var hub = new th.BudgetsHub();
-                hub.init();
+                hub.init(services);
                 VSS.notifyLoadSucceeded();
             });
         });

@@ -169,7 +169,7 @@ export abstract class BasicDataGrid<TEntity, TDocument extends IDocument<string,
     protected _updateDocument(self: BasicDataGrid<TEntity, TDocument, TEntityFactory>): void {
         updateDocument(self.document, self.factory.itemConstructor, self.factory.itemSerializer).then((doc) => {
             self.document = doc;
-            self.grid.setDataSource(Array.from(doc.map.values()));
+            self.grid.setDataSource(Array.from(doc.map.values()).filter((value) => { return this.filterValue(value, this.status); }));
             self.wait.endWait();
         }, (reason) => {
             self.notification.setError($("<span />").html(reason));

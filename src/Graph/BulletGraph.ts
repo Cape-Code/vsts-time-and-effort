@@ -2,7 +2,7 @@ export class BulletGraph {
     private max: number;
     private width: number;
 
-    constructor(public container: JQuery<HTMLElement>, public title: string, public subtitle: string, public limit: number, public value: number, public value2: number, public containerWidth: number, emptyContainer = true, public height = 36, public marginLeft = 60, public marginTop = 8, public marginRight = 16, public marginBottom = 16) {
+    constructor(public container: JQuery<HTMLElement>, public title: string, public subtitle: string, public limit: number, public value: number, public value2: number, public containerWidth: number, emptyContainer = true, public height = 36, public marginLeft = 60, public marginTop = 8, public marginRight = 32, public marginBottom = 16) {
         if (!limit) {
             limit = 0;
         }

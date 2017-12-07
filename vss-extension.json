@@ -1,7 +1,7 @@
 {
     "manifestVersion": 1,
     "id": "cc-time-and-effort",
-    "version": "0.1.320",
+    "version": "0.1.332",
     "galleryProperties": [{ "markdownItParser": "true" }],
     "publisher": "capecode",
     "name": "Time & Effort",
@@ -9,6 +9,7 @@
     "icons": {
         "default": "images/logo.png"
     },
+    "demands": ["contribution/ms.vss-web.charts-service"],
     "public": true,
     "tags": [
         "plan",
