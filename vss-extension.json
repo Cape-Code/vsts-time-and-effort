@@ -1,7 +1,7 @@
 {
     "manifestVersion": 1,
     "id": "cc-time-and-effort",
-    "version": "0.1.316",
+    "version": "0.1.317",
     "galleryProperties": [{ "markdownItParser": "true" }],
     "publisher": "capecode",
     "name": "Time & Effort",
@@ -136,30 +136,7 @@
             "properties": {
                 "name": "Budget",
                 "uri": "pages/budget-group.html",
-                "height": 180
-            }
-        },
-        {
-            "id": "tae-times-widget",
-            "type": "ms.vss-dashboards-web.widget",
-            "targets": [
-                "ms.vss-dashboards-web.widget-catalog"
-            ],
-            "properties": {
-                "name": "Time & Effort",
-                "description": "Time & Cost Summary",
-                "catalogIconUrl:": "images/dashboardIcon.png",
-                "previewImageUrl": "images/preview.png",
-                "uri": "pages/times-widget.html",
-                "supportedSizes": [
-                    {
-                        "rowSpan": 1,
-                        "columnSpan": 3
-                    }
-                ],
-                "supportedScopes": [
-                    "project_team"
-                ]
+                "height": 220
             }
         },
         {
