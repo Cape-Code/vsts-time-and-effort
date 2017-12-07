@@ -11,9 +11,10 @@
   }
   
   .budget {
-    margin-right: 24px;
+    margin-right: 16px;
+    margin-bottom: 16px;
     border: 1px solid #666;
-    width: 400px;
+    width: 430px;
     height: 230px;
     padding: 16px;
     border-radius: 8px;
