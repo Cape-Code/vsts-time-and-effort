@@ -33,7 +33,7 @@ function _handleClick(actionContext: any): void {
     let showNotice = workItemIds.length > 4;
 
     TimeTrackingRoleFactory.getRoles().then((roles) => {
-        reassignBudgets(workItemIds, this.__budget.budgetDataDocumentId, roles).then(() => {
+        reassignBudgets(workItemIds, this.__budget ? this.__budget.budgetDataDocumentId : undefined, roles).then(() => {
             if (showNotice)
                 alert('Budget assigned');
         });
