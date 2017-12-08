@@ -42,10 +42,13 @@ export class BulletGraph {
         measureLabel.appendChild(measureLabelText);
         g.appendChild(measureLabel);
 
+        let suppressLabelRange = limit * 160 / 100;
+        let suppressLabel = value > suppressLabelRange || value2 > suppressLabelRange;
+
         this._renderTick(g, 0, height);
-        this._renderTick(g, lim80, height);
+        this._renderTick(g, lim80, height, suppressLabel);
         this._renderTick(g, limit, height);
-        this._renderTick(g, lim120, height);
+        this._renderTick(g, lim120, height, suppressLabel);
 
         g.appendChild(this._makeSVGEl('g', { class: 'axis' }));
 
@@ -70,13 +73,15 @@ export class BulletGraph {
         container.appendChild(this._makeSVGEl('rect', { class: `range s${idx}`, width: this._scale(value), height: height, x: 0 }));
     }
 
-    private _renderTick(container: SVGAElement, value: number, height: number) {
+    private _renderTick(container: SVGAElement, value: number, height: number, suppressLabel = false) {
         let g = this._makeSVGEl('g', { class: 'tick', transform: `translate(${this._scale(value)}, 0)`, style: 'opacity: 1;' });
         g.appendChild(this._makeSVGEl('line', { y1: height, y2: height * 7 / 6 }));
-        let text = this._makeSVGEl('text', { dy: '1em', y: height * 7 / 6 });
-        text.setAttribute('text-anchor', 'middle');
-        text.textContent = value.toFixed(0).toString();
-        g.appendChild(text);
+        if (!suppressLabel) {
+            let text = this._makeSVGEl('text', { dy: '1em', y: height * 7 / 6 });
+            text.setAttribute('text-anchor', 'middle');
+            text.textContent = value.toFixed(0).toString();
+            g.appendChild(text);
+        }
         container.appendChild(g);
     }
 
