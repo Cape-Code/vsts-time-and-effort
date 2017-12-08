@@ -83,8 +83,8 @@ export class BudgetsHub {
     protected makePieChart(labels: string[], dataFn: (label: string) => number, container: JQuery, chartService: any): any {
         let options = {
             hostOptions: {
-                height: 240,
-                width: 240
+                height: 260,
+                width: 260
             },
             chartType: 'pie',
             series: [{

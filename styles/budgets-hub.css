@@ -12,17 +12,16 @@
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    justify-content: space-around;
+    justify-content: center;
     align-content: center;
   }
 
 .stats {
-  padding-top: 10px;
   width: 100%;
   background: #dfdfdf;
   display: flex;
   flex-direction: row;
-  height: 250px;
+  height: 260px;
   justify-content: space-around;
   align-content: center;
 }
