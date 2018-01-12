@@ -151,6 +151,9 @@ function createBudgetMap(workItemIds: Set<string>, map?: Map<string, TimeTrackin
     if (!map)
         map = new Map<string, TimeTrackingBudgetDataDocument>();
 
+    if (workItemIds.has(undefined))
+        workItemIds.delete(undefined);
+
     if (workItemIds.size > 0) {
         let me = workItemIds.values().next().value;
         return getCustomDocument(TimeTrackingBudgetAssignmentDocumentFactory.prototype.createDocumentId(me.toString()), TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer).then((doc) => {
