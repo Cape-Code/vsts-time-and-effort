@@ -71,7 +71,6 @@ A tile containing bullet graphs and a link to an auto-generated query for each b
 ## Known limitations
 
 * [Auto generated queries can not be customized yet](https://github.com/Cape-Code/vsts-time-and-effort/issues/6)
-* [Only people with admin access in your team can currently use this extension](https://github.com/Cape-Code/vsts-time-and-effort/issues/5)
 * Tech-savvy people with access to your VSTS account can easily read all data stored by this extension using the extension data service provided by Microsoft.
     * To avoid this we would have to store all data in Work Items including extensive process customization, which is too much work and not our goal
 * There is no undo!
