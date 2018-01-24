@@ -79,7 +79,7 @@ export class BulletGraph {
         if (!suppressLabel) {
             let text = this._makeSVGEl('text', { dy: '1em', y: height * 7 / 6 });
             text.setAttribute('text-anchor', 'middle');
-            text.textContent = value.toFixed(0).toString();
+            text.textContent = value.toFixed(2).toString();
             g.appendChild(text);
         }
         container.appendChild(g);

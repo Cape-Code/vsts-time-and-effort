@@ -41,7 +41,7 @@ export abstract class BasicHierarchyGrid<TEntity, TDocument extends IDocument<st
             let gridOptions = createHierarchyGridOptions(dataFn, 'calc(100% - 38px)', '100%', 'workItemId', this.options.sortOrder ? this.options.sortOrder : 'asc', false, this.options.factory.createHierarchyGridColumns);
 
             gridOptions.openRowDetail = (index: number) => {
-                let data = this.grid.getRowData(index);
+                let data = this.grid.getRowData(this.grid.getSelectedDataIndex());
                 if (data.workItemId) {
                     openWorkItem(data.workItemId);
                 }

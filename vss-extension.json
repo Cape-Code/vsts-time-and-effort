@@ -1,7 +1,7 @@
 {
     "manifestVersion": 1,
     "id": "cc-time-and-effort",
-    "version": "0.1.342",
+    "version": "0.1.343",
     "galleryProperties": [{ "markdownItParser": "true" }],
     "publisher": "capecode",
     "name": "Time & Effort",

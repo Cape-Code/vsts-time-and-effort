@@ -101,7 +101,7 @@ export class TimesHub {
             let gridOptions = createHierarchyGridOptions(() => values, 'calc(100% - 38px)', '100%', 'date', 'desc', false, TimeTrackingCompleteEntryFactory.prototype.createGridColumns);
 
             gridOptions.openRowDetail = (index: number) => {
-                let data = this.grid.getRowData(index);
+                let data = this.grid.getRowData(this.grid.getSelectedDataIndex());
                 if (data.workItemIdString) {
                     openWorkItem(parseInt(data.workItemIdString));
                 }
