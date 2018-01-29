@@ -16,12 +16,12 @@ import { getGlobalTimeIndex, getTimeIndexById, getDocumentById, getCustomDocumen
 import { updateQuery } from "./QueryHelper";
 import { format } from "../Data/Date";
 
-function getRelationTypes(client: WorkItemTrackingHttpClient3_2, filterFn: (type: WorkItemRelationType) => boolean): IPromise<Map<string, WorkItemRelationType>> {
+function getRelationTypes(client: WorkItemTrackingHttpClient3_2): IPromise<Map<string, WorkItemRelationType>> {
     return client.getRelationTypes().then((types) => {
         let typesMap = new Map<string, WorkItemRelationType>();
 
         types.forEach((t) => {
-            if (filterFn(t))
+            if (t.attributes['topology'] === 'tree' && t.attributes['usage'] === 'workItemLink' && (t.name === 'Parent' || t.name === 'Child'))
                 typesMap.set(t.referenceName, t);
         });
 
@@ -334,7 +334,7 @@ export function loadBudgetAssignment(workItemId: number): IPromise<TimeTrackingB
         }
     }, (reason) => {
         return Q.all<any>([
-            getRelationTypes(client, (t) => t.attributes['topology'] === 'tree' && t.attributes['usage'] === 'workItemLink'),
+            getRelationTypes(client),
             getWorkItemWithRelations(workItemId, client)
         ]).spread((types: Map<string, WorkItemRelationType>, wi: WorkItem) => {
             let parentId = getParentId(wi, types);
@@ -527,7 +527,7 @@ export function getWorkItemHierarchy<TEntity, TDocument extends IDocument<string
     let client = getClient();
 
     return Q.all<any>([
-        getRelationTypes(client, (t) => t.attributes['topology'] === 'tree' && t.attributes['usage'] === 'workItemLink'),
+        getRelationTypes(client),
         getWorkItemWithRelations(options.workItemId, client)
     ]).spread((types: Map<string, WorkItemRelationType>, wi: WorkItem) => {
         return createHierarchyRec<TEntity, TWorkItemHierarchy>([wi], client, types, options.fnApplyValues).then((map) => {
@@ -542,7 +542,7 @@ export function getWorkItemAncestorHierarchy<T>(workItemId: number): IPromise<IW
     let client = getClient();
 
     return Q.all<any>([
-        getRelationTypes(client, (t) => t.attributes['topology'] === 'tree' && t.attributes['usage'] === 'workItemLink'),
+        getRelationTypes(client),
         getWorkItemWithRelations(workItemId, client)
     ]).spread((types: Map<string, WorkItemRelationType>, wi: WorkItem) => {
         return createParentHierarchyRec(workItemId, wi, client, types).then((parents) => {
