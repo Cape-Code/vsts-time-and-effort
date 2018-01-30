@@ -17,7 +17,7 @@ export function updateQuery(project: string, queryId: string, ids: number[]): IP
     let client = getClient();
 
     return client.getQuery(project, queryId).then((query) => {
-        return client.updateQuery(<QueryHierarchyItem>{ wiql: createWIQL(ids) }, project, query.path)
+        return client.updateQuery(<QueryHierarchyItem>{ wiql: createWIQL(ids) }, project, query.id);
     });
 }
 
