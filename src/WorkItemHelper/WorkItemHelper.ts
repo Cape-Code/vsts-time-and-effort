@@ -8,7 +8,7 @@ import { TimeTrackingEntriesTimeIndex, TimeTrackingEntriesDocument, IDocument, I
 import { TimeTrackingEntry, TimeTrackingEntryFactory } from './../Data/TimeTrackingEntry';
 import { TimeTrackingBudget } from './../Data/TimeTrackingBudget';
 import { TimeTrackingCompleteEntry } from './../Data/TimeTrackingCompleteEntry';
-import { WorkItemTrackingHttpClient3_2, getClient } from 'TFS/WorkItemTracking/RestClient';
+import { WorkItemTrackingHttpClient4_1, getClient } from 'TFS/WorkItemTracking/RestClient';
 import { WorkItemRelationType, WorkItem, WorkItemExpand, WorkItemType } from 'TFS/WorkItemTracking/Contracts';
 import { TimeTrackingBudgetDataDocument, TimeTrackingBudgetDataDocumentFactory } from './../Data/TimeTrackingBudgetDataDocument';
 import * as Q from 'q';
@@ -16,7 +16,7 @@ import { getGlobalTimeIndex, getTimeIndexById, getDocumentById, getCustomDocumen
 import { updateQuery } from "./QueryHelper";
 import { format } from "../Data/Date";
 
-function getRelationTypes(client: WorkItemTrackingHttpClient3_2): IPromise<Map<string, WorkItemRelationType>> {
+function getRelationTypes(client: WorkItemTrackingHttpClient4_1): IPromise<Map<string, WorkItemRelationType>> {
     return client.getRelationTypes().then((types) => {
         let typesMap = new Map<string, WorkItemRelationType>();
 
@@ -29,15 +29,15 @@ function getRelationTypes(client: WorkItemTrackingHttpClient3_2): IPromise<Map<s
     });
 }
 
-function getWorkItems(ids: number[], fields: string[], client: WorkItemTrackingHttpClient3_2): IPromise<WorkItem[]> {
+function getWorkItems(ids: number[], fields: string[], client: WorkItemTrackingHttpClient4_1): IPromise<WorkItem[]> {
     return client.getWorkItems(ids, fields);
 }
 
-function getWorkItemWithRelations(id: number, client: WorkItemTrackingHttpClient3_2): IPromise<WorkItem> {
+function getWorkItemWithRelations(id: number, client: WorkItemTrackingHttpClient4_1): IPromise<WorkItem> {
     return client.getWorkItem(id, null, null, WorkItemExpand.Relations);
 }
 
-function getWorkItemsWithRelations(ids: number[], client: WorkItemTrackingHttpClient3_2): IPromise<WorkItem[]> {
+function getWorkItemsWithRelations(ids: number[], client: WorkItemTrackingHttpClient4_1): IPromise<WorkItem[]> {
     return client.getWorkItems(ids, null, null, WorkItemExpand.Relations);
 }
 
@@ -625,7 +625,7 @@ function getParentId(workItem: WorkItem, types: Map<string, WorkItemRelationType
     return parentId;
 }
 
-function createParentHierarchyRec(rootId: number, workItem: WorkItem, client: WorkItemTrackingHttpClient3_2, types: Map<string, WorkItemRelationType>, parents?: IWorkItemInfo[]): IPromise<IWorkItemInfo[]> {
+function createParentHierarchyRec(rootId: number, workItem: WorkItem, client: WorkItemTrackingHttpClient4_1, types: Map<string, WorkItemRelationType>, parents?: IWorkItemInfo[]): IPromise<IWorkItemInfo[]> {
     if (!parents)
         parents = [];
 
@@ -642,7 +642,7 @@ function createParentHierarchyRec(rootId: number, workItem: WorkItem, client: Wo
     }
 }
 
-function createHierarchyRec<TEntity, TWorkItemHierarchy extends IWorkItemHierarchy<TEntity>>(items: WorkItem[], client: WorkItemTrackingHttpClient3_2, types: Map<string, WorkItemRelationType>, fnApplyValues: (element: TWorkItemHierarchy) => void, icons?: Map<string, string>, mapping?: Map<number, TWorkItemHierarchy>): IPromise<Map<number, TWorkItemHierarchy>> {
+function createHierarchyRec<TEntity, TWorkItemHierarchy extends IWorkItemHierarchy<TEntity>>(items: WorkItem[], client: WorkItemTrackingHttpClient4_1, types: Map<string, WorkItemRelationType>, fnApplyValues: (element: TWorkItemHierarchy) => void, icons?: Map<string, string>, mapping?: Map<number, TWorkItemHierarchy>): IPromise<Map<number, TWorkItemHierarchy>> {
     if (!mapping) {
         mapping = new Map<number, TWorkItemHierarchy>();
     }

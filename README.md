@@ -70,11 +70,12 @@ A tile containing bullet graphs and a link to an auto-generated query for each b
 
 ## Known limitations
 
-* [Auto generated queries can not be customized yet](https://github.com/Cape-Code/vsts-time-and-effort/issues/6)
-* Tech-savvy people with access to your VSTS account can easily read all data stored by this extension using the extension data service provided by Microsoft.
+* Not compatible with old IE versions (below 11 not supported at all, IE 11 has some layout problems)
+    * Better IE support is not planned, please use Edge, Chrome, Safari, or Firefox 
+* Tech-savvy people with access to your VSTS account can easily read (and modify) all data stored by this extension using the extension data service provided by Microsoft.
     * To avoid this we would have to store all data in Work Items including extensive process customization, which is too much work and not our goal
 * There is no undo!
-* We implemented and used an importer for our existing time tracking data (from fields in Tasks) in an older project we migrated from an on-premise TFS instance, but it is disabled in this release -- check `Settings/TimesImportHub.ts` or contact us for help
+* We implemented and used an importer for our existing time tracking data (from fields in Tasks) in an older project we migrated from an on-premise TFS instance, but it is disabled in this release -- check `Settings/TimesImportHub.ts`
 
 ## Development
 

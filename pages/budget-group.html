@@ -4,7 +4,8 @@
 <head>
     <title>Budget Group</title>
     <meta charset="utf-8" />
-    <script src="../lib/VSS.SDK.min.js"></script>
+    <meta http-equiv="X-UA-Compatible" content="IE=11">
+    <script src="../node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js"></script>
     <link rel="stylesheet" href="../styles/wi-form-group.css">
     <link rel="stylesheet" href="../styles/bullet.css">
 </head>
@@ -17,13 +18,14 @@
             moduleLoaderConfig: {
                 baseUrl: '../scripts',
                 paths: {
-                    'WorkItemForm/BudgetGroup': 'app'
+                    'polyfills': 'app.polyfills',
+                    'WorkItemForm/BudgetGroup': 'app.budgetGroup'
                 }
             }
         });
 
         VSS.ready(function () {
-            VSS.require(['WorkItemForm/BudgetGroup'], function (tg) {
+            VSS.require(['polyfills','WorkItemForm/BudgetGroup'], function (p, tg) {
                 var group = new tg.BudgetGroup();
                 group.init();
                 VSS.notifyLoadSucceeded();

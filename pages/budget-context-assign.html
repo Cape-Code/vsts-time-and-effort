@@ -4,7 +4,8 @@
 <head>
     <title>Assign Budget</title>
     <meta charset="utf-8" />
-    <script src="../lib/VSS.SDK.min.js"></script>
+    <meta http-equiv="X-UA-Compatible" content="IE=11">
+    <script src="../node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js"></script>
 </head>
 
 <body>
@@ -15,13 +16,14 @@
             moduleLoaderConfig: {
                 baseUrl: '../scripts',
                 paths: {
-                    'ContextMenu/AssignBudget': 'app'
+                    'polyfills': 'app.polyfills',
+                    'ContextMenu/AssignBudget': 'app.budgetContextAssign'
                 }
             }
         });
 
         VSS.ready(function () {
-            VSS.require(['ContextMenu/AssignBudget'], function () {
+            VSS.require(['polyfills','ContextMenu/AssignBudget'], function () {
                 VSS.notifyLoadSucceeded();
             });
         });

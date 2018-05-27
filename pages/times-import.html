@@ -4,7 +4,8 @@
 <head>
     <title>Times Settings</title>
     <meta charset="utf-8" />
-    <script src="../lib/VSS.SDK.min.js"></script>
+    <meta http-equiv="X-UA-Compatible" content="IE=11">
+    <script src="../node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js"></script>
     <link rel="stylesheet" href="../styles/common.css">
 </head>
 
@@ -16,13 +17,14 @@
             moduleLoaderConfig: {
                 baseUrl: '../scripts',
                 paths: {
-                    'Settings/TimesImportHub': 'app'
+                    'polyfills': 'app.polyfills',
+                    'Settings/TimesImportHub': 'app.timesImport'
                 }
             }
         });
         
         VSS.ready(function() {
-            VSS.require(['Settings/TimesImportHub'], function (tsh) {
+            VSS.require(['polyfills','Settings/TimesImportHub'], function (p, tsh) {
                 var hub = new tsh.TimesImportHub();
                 hub.init();
                 VSS.notifyLoadSucceeded();

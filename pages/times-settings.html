@@ -4,7 +4,8 @@
 <head>
     <title>Times Settings</title>
     <meta charset="utf-8" />
-    <script src="../lib/VSS.SDK.min.js"></script>
+    <meta http-equiv="X-UA-Compatible" content="IE=11">
+    <script src="../node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js"></script>
     <link rel="stylesheet" href="../styles/common.css">
 </head>
 
@@ -16,13 +17,14 @@
             moduleLoaderConfig: {
                 baseUrl: '../scripts',
                 paths: {
-                    'Settings/TimesSettingsHub': 'app'
+                    'polyfills': 'app.polyfills',
+                    'Settings/TimesSettingsHub': 'app.timesSettings',
                 }
             }
         });
 
         VSS.ready(function () {
-            VSS.require(['Settings/TimesSettingsHub'], function (app) {
+            VSS.require(['polyfills','Settings/TimesSettingsHub'], function (p, app) {
                 var hub = new app.TimesSettingsHub();
                 hub.init();
                 VSS.notifyLoadSucceeded();

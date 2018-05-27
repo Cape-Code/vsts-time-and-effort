@@ -18,9 +18,9 @@ export function getCurrentProject(): string {
 function _serializeData<T extends IDocument<U, V>, U, V>(value: T, serializeFn?: (x: V) => any): T {
     if (serializeFn) {
         value.serialized = [];
-        for (let kvp of value.map.entries()) {
-            value.serialized.push([kvp[0], serializeFn(kvp[1])]);
-        }
+        value.map.forEach((v,k) => {
+            value.serialized.push([k, serializeFn(v)]);
+        });
     } else {
         value.serialized = Array.from(value.map.entries());
     }

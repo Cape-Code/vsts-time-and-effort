@@ -4,7 +4,8 @@
 <head>
     <title>Budgets Hub</title>
     <meta charset="utf-8" />
-    <script src="../lib/VSS.SDK.min.js"></script>
+    <meta http-equiv="X-UA-Compatible" content="IE=11">
+    <script src="../node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js"></script>
     <link rel="stylesheet" href="../styles/common.css">
     <link rel="stylesheet" href="../styles/budgets-hub.css">
     <link rel="stylesheet" href="../styles/bullet.css">
@@ -18,13 +19,14 @@
             moduleLoaderConfig: {
                 baseUrl: '../scripts',
                 paths: {
-                    'Reporting/BudgetsHub': 'app'
+                    'polyfills': 'app.polyfills',
+                    'Reporting/BudgetsHub': 'app.budgetsHub'
                 }
             }
         });
         
         VSS.ready(function() {
-            VSS.require(['Reporting/BudgetsHub', 'Charts/Services'], function (th, services) {
+            VSS.require(['polyfills','Reporting/BudgetsHub', 'Charts/Services'], function (p, th, services) {
                 var hub = new th.BudgetsHub();
                 hub.init(services);
                 VSS.notifyLoadSucceeded();

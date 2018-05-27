@@ -1,7 +1,7 @@
 {
     "manifestVersion": 1,
     "id": "cc-time-and-effort",
-    "version": "0.1.349",
+    "version": "0.1.373",
     "galleryProperties": [{ "markdownItParser": "true" }],
     "publisher": "capecode",
     "name": "Time & Effort",
@@ -172,19 +172,16 @@
             "addressable": true
         },
         {
-            "path": "node_modules/vss-web-extension-sdk/lib",
-            "addressable": true,
-            "packagePath": "lib"
+            "path": "node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js",
+            "addressable": true
         },
         {
-            "path": "node_modules/file-saver",
-            "addressable": true,
-            "packagePath": "lib"
+            "path": "node_modules/file-saver/FileSaver.min.js",
+            "addressable": true
         },
         {
-            "path": "node_modules/xlsx/dist",
-            "addressable": true,
-            "packagePath": "lib"
+            "path": "node_modules/xlsx/dist/xlsx.core.min.js",
+            "addressable": true
         }
     ]
 }

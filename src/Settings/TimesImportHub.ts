@@ -6,7 +6,7 @@ import { WaitControl } from 'VSS/Controls/StatusIndicator';
 import { ICustomDocument, TimeTrackingEntriesDocument, TimeTrackingEstimateEntriesDocument, TimeTrackingEntriesTimeIndex } from './../Data/Contract';
 import { hasAccess } from "../Auth/AuthHelper";
 import { createNotification } from "../UIHelper/NotificationHelper";
-import { getClient, WorkItemTrackingHttpClient3_2 } from "TFS/WorkItemTracking/RestClient";
+import { getClient, WorkItemTrackingHttpClient4_1 } from "TFS/WorkItemTracking/RestClient";
 import { Wiql, WorkItemUpdate } from "TFS/WorkItemTracking/Contracts";
 import { getCurrentProject, getCustomDocument, createCustomDocumentWithValue, updateCustomDocument, getDocumentById, updateDocument, getTimeIndex } from "../Data/DataServiceHelper";
 import * as Q from 'q';
@@ -19,7 +19,7 @@ export class TimesImportHub {
     private project: string;
     private queueDocumentId: string;
     private wait: WaitControl;
-    private client: WorkItemTrackingHttpClient3_2;
+    private client: WorkItemTrackingHttpClient4_1;
     private role: TimeTrackingRole;
     private indexes: Map<number, Map<number, TimeTrackingEntriesTimeIndex>>;
     private dirtyIndexes: Map<number, Map<number, TimeTrackingEntriesTimeIndex>>;
@@ -260,6 +260,7 @@ export class TimesImportHub {
             map.forEach((idx, month) => {
                 promises.push(updateDocument(idx).then((doc) => {
                     this.indexes.get(year).set(month, doc);
+                    return doc;
                 }));
             });
         });

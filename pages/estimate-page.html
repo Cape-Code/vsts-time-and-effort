@@ -4,7 +4,8 @@
 <head>
     <title>Budget Page</title>
     <meta charset="utf-8" />
-    <script src="../lib/VSS.SDK.min.js"></script>
+    <meta http-equiv="X-UA-Compatible" content="IE=11">
+    <script src="../node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js"></script>
     <link rel="stylesheet" href="../styles/common.css">
 </head>
 
@@ -16,13 +17,14 @@
             moduleLoaderConfig: {
                 baseUrl: '../scripts',
                 paths: {
-                    'WorkItemForm/EstimatePage': 'app'
+                    'polyfills': 'app.polyfills',
+                    'WorkItemForm/EstimatePage': 'app.estimatePage'
                 }
             }
         });
         
         VSS.ready(function() {
-            VSS.require(['WorkItemForm/EstimatePage'], function (tp) {
+            VSS.require(['polyfills','WorkItemForm/EstimatePage'], function (p, tp) {
                 var page = new tp.EstimatePage();
                 page.init();
                 VSS.notifyLoadSucceeded();

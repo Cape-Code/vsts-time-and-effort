@@ -3,7 +3,7 @@ import { TimeTrackingBudget, TimeTrackingBudgetFactory } from './../Data/TimeTra
 import { reassignBudgets } from "../WorkItemHelper/WorkItemHelper";
 
 let provider = {
-    getMenuItems: (context) => {
+    getMenuItems: (context: any) => {
         return _getBudgets().then((budgets) => {
             let items: IContributedMenuItem[] = [];
             items.push(<IContributedMenuItem>{ id: '-1', text: 'None', action: _handleClick });
