@@ -38,6 +38,11 @@ export class BudgetsHub {
                             promises.push(getCustomDocument(value.budgetDataDocumentId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer));
                     });
 
+                    if (promises.length === 0) {
+                        outerContainer.hide();
+                        createNotification(c).setMessage($("<span />").html(`There are no budgets configured! Please go to <a href="https://${VSS.getWebContext().host.name}.visualstudio.com/${VSS.getWebContext().project.name}/_settings/capecode.cc-time-and-effort-dev.tae-times-settings-hub" >Settings (Time & Effort) hub</a> to setup customers & budgets.`));
+                    }
+
                     Q.all<TimeTrackingBudgetDataDocument>(promises).then((data) => {
                         let agg = new Map<string, BudgetReportingData>();
 
