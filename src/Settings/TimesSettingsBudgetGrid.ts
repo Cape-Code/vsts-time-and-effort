@@ -108,13 +108,15 @@ export class TimesSettingsBudgetGrid extends BasicDataGrid<TimeTrackingBudget, T
     }
 
     afterCreateEntry(entry: TimeTrackingBudget, type: BaseDataGridCreateDialogType, self: TimesSettingsBudgetGrid): IPromise<void> {
+        let project = getCurrentProject();
+        //Issue is that query._links is no longer populated, however the URL for the query can be built rather than being pulled from the _links property
+        let querylink = 'https://'+VSS.getWebContext().host.name+'.visualstudio.com/'+VSS.getWebContext().project.name+'/_queries/query/';
         entry.budgetDataDocumentId = TimeTrackingBudgetDataDocumentFactory.prototype.createDocumentId(newGuid());
-        return createQuery(getCurrentProject(), entry.toString(), [], this.folder).then((query) => {
+        return createQuery(project, entry.toString(), [], this.folder).then((query) => {
             return TimeTrackingRoleFactory.getRoles().then((roles) => {
-                return createCustomDocumentWithValue(new TimeTrackingBudgetDataDocument(entry.budgetDataDocumentId, entry, query.id, query._links.html.href), TimeTrackingBudgetDataDocumentFactory.prototype.deserializer, TimeTrackingBudgetDataDocumentFactory.prototype.serializer);
+                return createCustomDocumentWithValue(new TimeTrackingBudgetDataDocument(entry.budgetDataDocumentId, entry, query.id, querylink + query.id), TimeTrackingBudgetDataDocumentFactory.prototype.deserializer, TimeTrackingBudgetDataDocumentFactory.prototype.serializer);
             });
         });
-    }
 
     repairValue(entry: TimeTrackingBudget, self: TimesSettingsBudgetGrid): IPromise<void> {
         return getCustomDocument(entry.budgetDataDocumentId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
