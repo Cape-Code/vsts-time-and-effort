@@ -32,9 +32,9 @@ export class TimesPageTimesGrid extends BasicDataGrid<TimeTrackingEntry, TimeTra
     private _getRoles(): IPromise<TimeTrackingRolesDocument> {
         return Q.all([
             TimeTrackingRoleFactory.getRoles(),
-            getCustomDocument(TimeTrackingBudgetAssignmentDocumentFactory.prototype.createDocumentId(this.options.workItemId.toString()), TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer),
+            getCustomDocument(TimeTrackingBudgetAssignmentDocumentFactory.prototype.createDocumentId(this.options.workItemId.toString()), TimeTrackingBudgetAssignmentDocumentFactory.prototype.deserializer).catch(()=>null),
         ]).spread((roles: TimeTrackingRolesDocument, assignment: TimeTrackingBudgetAssignmentDocument) => {
-            if (assignment.budgetDataId) {
+            if (assignment && assignment.budgetDataId) {
                 return getCustomDocument(assignment.budgetDataId, TimeTrackingBudgetDataDocumentFactory.prototype.deserializer).then((data) => {
                     data.roles.forEach((value, key) => {
                         roles.map.set(key, value);
